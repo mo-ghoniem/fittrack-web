@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export type UserRole = 'athlete' | 'coach' | null;
+export type UserRole = 'athlete' | 'coach' | 'admin' | null;
 
 interface UseUserRoleReturn {
   role: UserRole;

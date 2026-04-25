@@ -54,10 +54,10 @@ export function Header({ title, subtitle }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+    <header className="h-16 bg-surface-900/70 backdrop-blur-md border-b border-surface-border flex items-center justify-between pl-16 pr-4 sm:px-6 shrink-0">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
-        {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+        <h1 className="text-lg font-semibold text-ink tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs text-ink-muted">{subtitle}</p>}
       </div>
 
       <div className="flex items-center gap-3">
@@ -68,33 +68,36 @@ export function Header({ title, subtitle }: HeaderProps) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-surface-700 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-surface-900 text-xs font-bold shrink-0 bg-lime-gradient"
+              style={{ boxShadow: '0 0 14px -3px rgba(189,255,46,0.55)' }}
+            >
               {initials}
             </div>
             {!loading && (
-              <span className="hidden sm:block text-sm font-medium text-slate-700 max-w-[120px] truncate">
+              <span className="hidden sm:block text-sm font-medium text-ink max-w-[120px] truncate">
                 {userName || userEmail}
               </span>
             )}
-            <ChevronDown size={14} className="text-slate-400 hidden sm:block" />
+            <ChevronDown size={14} className="text-ink-subtle hidden sm:block" />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-xl border border-slate-200 shadow-lg z-50 py-1 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-60 bg-surface-800 rounded-xl border border-surface-border shadow-card-dark z-50 py-1 overflow-hidden">
               {/* User info */}
-              <div className="px-4 py-3 border-b border-slate-100">
-                <p className="text-sm font-semibold text-slate-900 truncate">
+              <div className="px-4 py-3 border-b border-surface-border">
+                <p className="text-sm font-semibold text-ink truncate">
                   {userName || 'User'}
                 </p>
-                <p className="text-xs text-slate-500 truncate">{userEmail}</p>
+                <p className="text-xs text-ink-muted truncate">{userEmail}</p>
                 {!loading && (
                   <span
                     className={`mt-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                       role === 'coach'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30'
+                        : 'bg-accent-400/15 text-accent-300 ring-1 ring-accent-400/30'
                     }`}
                   >
                     {role === 'coach' ? 'Coach' : 'Athlete'}
@@ -106,7 +109,7 @@ export function Header({ title, subtitle }: HeaderProps) {
               <div className="py-1">
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut size={15} />
                   Sign out

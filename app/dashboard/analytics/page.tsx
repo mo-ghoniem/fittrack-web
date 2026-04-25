@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Activity, TrendingUp, Clock, Flame, Trophy, Users, Dumbbell, BarChart2,
@@ -56,11 +56,37 @@ export default function AnalyticsPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: leaderboard } = useQuery({
-    queryKey: ['leaderboard', period],
-    queryFn: () => statsApi.leaderboard(period),
-    staleTime: 5 * 60 * 1000,
+  const [lbOffset, setLbOffset] = useState(0);
+  const [lbAllData, setLbAllData] = useState<any[]>([]);
+  const [lbTotal, setLbTotal] = useState(0);
+  const [lbFetchedAt, setLbFetchedAt] = useState<Date | null>(null);
+
+  const { data: leaderboardPage, isFetching: lbFetching } = useQuery({
+    queryKey: ['leaderboard', period, lbOffset],
+    queryFn: () => statsApi.leaderboard(period, 10, lbOffset),
+    staleTime: 60 * 1000,
+    refetchInterval: 30 * 1000,
   });
+
+  // Replace the onSuccess block with useEffect
+  useEffect(() => {
+    if (!leaderboardPage) return;
+    const page: any[] = (leaderboardPage as any)?.data ?? [];
+    setLbAllData((prev) => (lbOffset === 0 ? page : [...prev, ...page]));
+    setLbTotal((leaderboardPage as any)?.total ?? 0);
+    setLbFetchedAt(new Date());
+  }, [leaderboardPage, lbOffset]);
+
+  // Reset offset when period changes
+  const [prevPeriod, setPrevPeriod] = useState(period);
+  if (period !== prevPeriod) {
+    setPrevPeriod(period);
+    setLbOffset(0);
+    setLbAllData([]);
+  }
+
+  const leaderboard = lbAllData;
+  const hasMoreLb = leaderboard.length < lbTotal;
 
   const rankColors: Record<number, string> = { 1: 'text-yellow-500', 2: 'text-slate-400', 3: 'text-amber-600' };
 
@@ -214,15 +240,24 @@ export default function AnalyticsPage() {
               )}
 
               {/* Leaderboard */}
-              {leaderboard?.length > 0 && (
+              {leaderboard.length > 0 && (
                 <div className="bg-white rounded-2xl border border-slate-100 p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Users size={18} className="text-emerald-600" />
                     <h3 className="font-semibold text-slate-800">Workout Leaderboard</h3>
-                    <Badge variant="info" className="ml-auto">{period}</Badge>
+                    <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium ml-auto">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Live
+                    </span>
+                    <Badge variant="info">{period}</Badge>
                   </div>
+                  {lbFetchedAt && (
+                    <p className="text-xs text-slate-400 mb-3">
+                      Last updated {lbFetchedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  )}
                   <div className="space-y-2">
-                    {leaderboard.slice(0, 10).map((entry: any) => (
+                    {leaderboard.map((entry: any) => (
                       <div
                         key={entry.userId}
                         className={`flex items-center gap-3 py-2 px-3 rounded-xl ${
@@ -244,6 +279,15 @@ export default function AnalyticsPage() {
                       </div>
                     ))}
                   </div>
+                  {hasMoreLb && (
+                    <button
+                      onClick={() => setLbOffset((prev) => prev + 10)}
+                      disabled={lbFetching}
+                      className="mt-4 w-full py-2 text-sm font-semibold text-primary-600 hover:text-primary-800 disabled:opacity-50"
+                    >
+                      {lbFetching ? 'Loading...' : 'Load more'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
