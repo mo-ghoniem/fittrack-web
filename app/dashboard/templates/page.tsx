@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Trash2, Loader2, ClipboardList, ChevronLeft, ChevronRight,
   Users, X, Check, PlusCircle, Send, ArrowLeft, Calendar,
-  Edit2, MoreHorizontal,
+  Edit2, MoreHorizontal, BarChart2, Copy,
 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { CoachGuard } from '@/components/layout/CoachGuard';
@@ -67,31 +67,356 @@ function eventColor(id: string) {
 /* ═══════════════════════════════════════════════════════════════
    BLOCK EDITOR
 ═══════════════════════════════════════════════════════════════ */
-interface Block { name: string; description: string; videoUrl: string }
+
+type TimerMode = 'amrap' | 'emom' | 'tabata' | 'for_time' | 'stopwatch';
+
+interface TimerConfig {
+  mode: TimerMode;
+  /** Minutes for AMRAP / For Time time cap (default 20) */
+  timeCap?: number;
+  /** Total minutes for EMOM (default 20) */
+  emomMinutes?: number;
+  /** Minutes per EMOM round/interval (default 1, e.g. 2 = every 2 min) */
+  emomInterval?: number;
+  /** Tabata work duration in seconds (default 20) */
+  tabataWork?: number;
+  /** Tabata rest duration in seconds (default 10) */
+  tabataRest?: number;
+  /** Number of Tabata rounds (default 8) */
+  tabataRounds?: number;
+}
+
+interface BlockScaling {
+  rx?: string;     // Standard / As Prescribed
+  scaled?: string; // Scaled / Modification
+  rxPlus?: string; // Elite / RX+
+}
+
+interface Block {
+  name: string;
+  description: string;
+  videoUrl: string;
+  isTracked?: boolean;
+  scoreType?: 'weight' | 'time' | 'reps' | 'rounds';
+  timer?: TimerConfig;
+  scaling?: BlockScaling;
+}
+
+const SCORE_TYPE_OPTIONS: { value: Block['scoreType']; label: string }[] = [
+  { value: 'weight', label: 'Weight (kg)' },
+  { value: 'time',   label: 'Time (fastest)' },
+  { value: 'reps',   label: 'Reps (most)' },
+  { value: 'rounds', label: 'Rounds (most)' },
+];
+
+const TIMER_MODE_OPTIONS: { value: TimerMode; label: string; icon: string; hint: string }[] = [
+  { value: 'amrap',     label: 'AMRAP',      icon: '🔄', hint: 'Countdown from time cap' },
+  { value: 'emom',      label: 'EMOM',       icon: '⏱️', hint: 'Every Minute On the Minute' },
+  { value: 'tabata',    label: 'Tabata',     icon: '🔥', hint: '20s work / 10s rest × 8' },
+  { value: 'for_time',  label: 'For Time',   icon: '⚡', hint: 'Count up with optional cap' },
+  { value: 'stopwatch', label: 'Stopwatch',  icon: '🕐', hint: 'Simple stopwatch' },
+];
+
+function Checkbox({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+        checked ? 'bg-primary-600 border-primary-600' : 'border-slate-300 hover:border-primary-400'
+      }`}
+    >
+      {checked && <Check size={10} className="text-white" />}
+    </button>
+  );
+}
 
 function BlockEditor({ blocks, onChange }: { blocks: Block[]; onChange:(b:Block[])=>void }) {
+  function update(i: number, patch: Partial<Block>) {
+    const b = [...blocks];
+    b[i] = { ...b[i], ...patch };
+    onChange(b);
+  }
+
+  function updateTimer(i: number, patch: Partial<TimerConfig>) {
+    const existing = blocks[i].timer ?? { mode: 'amrap', timeCap: 20 };
+    update(i, { timer: { ...existing, ...patch } });
+  }
+
   return (
     <div className="space-y-3">
-      {blocks.map((block, i) => (
-        <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Block {i+1}</span>
-            <button type="button" onClick={() => onChange(blocks.filter((_,idx)=>idx!==i))}
-              className="text-slate-400 hover:text-red-500 transition-colors"><X size={13}/></button>
+      {blocks.map((block, i) => {
+        const hasTimer = !!block.timer;
+        const timerMode = block.timer?.mode ?? 'amrap';
+        const modeInfo = TIMER_MODE_OPTIONS.find(m => m.value === timerMode)!;
+
+        return (
+          <div key={i} className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+            {/* Block header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Block {i+1}</span>
+                {block.isTracked && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-100 text-primary-700 border border-primary-200">
+                    <BarChart2 size={9}/> Tracked
+                  </span>
+                )}
+                {hasTimer && (() => {
+                  let detail = '';
+                  if (timerMode === 'amrap' || timerMode === 'for_time') {
+                    detail = ` · ${block.timer?.timeCap ?? 20} min`;
+                  } else if (timerMode === 'emom') {
+                    const interval = block.timer?.emomInterval ?? 1;
+                    const total    = block.timer?.emomMinutes  ?? 20;
+                    detail = interval > 1
+                      ? ` · E${interval}MOM · ${total} min`
+                      : ` · ${total} min`;
+                  } else if (timerMode === 'tabata') {
+                    const w = block.timer?.tabataWork   ?? 20;
+                    const r = block.timer?.tabataRest   ?? 10;
+                    const n = block.timer?.tabataRounds ?? 8;
+                    detail = ` · ${w}s/${r}s × ${n}`;
+                  }
+                  return (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      {modeInfo.icon} {modeInfo.label}{detail}
+                    </span>
+                  );
+                })()}
+              </div>
+              <button type="button" onClick={() => onChange(blocks.filter((_,idx)=>idx!==i))}
+                className="text-slate-400 hover:text-red-500 transition-colors">
+                <X size={13}/>
+              </button>
+            </div>
+
+            {/* Block fields */}
+            <input
+              value={block.name}
+              onChange={e => update(i, { name: e.target.value })}
+              placeholder="e.g. 21-15-9 Thrusters + Pull-ups"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            <textarea
+              value={block.description}
+              onChange={e => update(i, { description: e.target.value })}
+              placeholder="Description / instructions… Use @75% for percentage-based weights"
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+            />
+            <input
+              value={block.videoUrl}
+              onChange={e => update(i, { videoUrl: e.target.value })}
+              placeholder="Video URL (optional)"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+
+            {/* ── Track for analytics ─────────────────────────────── */}
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <Checkbox
+                checked={!!block.isTracked}
+                onChange={() => update(i, { isTracked: !block.isTracked, scoreType: !block.isTracked ? 'weight' : undefined })}
+              />
+              <span className="text-xs text-slate-600 font-medium select-none">Track for analytics</span>
+              {block.isTracked && (
+                <select
+                  value={block.scoreType ?? 'weight'}
+                  onChange={e => update(i, { scoreType: e.target.value as Block['scoreType'] })}
+                  className="ml-auto text-xs border border-primary-200 bg-primary-50 text-primary-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500 font-medium"
+                >
+                  {SCORE_TYPE_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* ── Include Timer ────────────────────────────────────── */}
+            <div className="border-t border-slate-100 pt-2 space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={hasTimer}
+                  onChange={() => update(i, {
+                    timer: hasTimer ? undefined : { mode: 'amrap' as TimerMode, timeCap: 20 },
+                  })}
+                />
+                <span className="text-xs text-slate-600 font-medium select-none">Include timer</span>
+              </div>
+
+              {hasTimer && (
+                <div className="ml-6 space-y-2.5 animate-fadeIn">
+                  {/* Timer mode selector */}
+                  <div className="grid grid-cols-5 gap-1">
+                    {TIMER_MODE_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        title={opt.hint}
+                        onClick={() => updateTimer(i, { mode: opt.value })}
+                        className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg border text-[10px] font-semibold transition-colors ${
+                          timerMode === opt.value
+                            ? 'border-amber-400 bg-amber-50 text-amber-700'
+                            : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                        }`}
+                      >
+                        <span className="text-base leading-none">{opt.icon}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Hint text */}
+                  <p className="text-[11px] text-slate-400 italic">{modeInfo.hint}</p>
+
+                  {/* Mode-specific config */}
+                  {(timerMode === 'amrap' || timerMode === 'for_time') && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-slate-600 font-medium shrink-0">Time cap</label>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={1} max={120}
+                          value={block.timer?.timeCap ?? 20}
+                          onChange={e => updateTimer(i, { timeCap: Math.max(1, parseInt(e.target.value) || 20) })}
+                          className="w-16 px-2 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-center font-semibold"
+                        />
+                        <span className="text-xs text-slate-500">min</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {timerMode === 'emom' && (() => {
+                    const interval  = block.timer?.emomInterval ?? 1;
+                    const total     = block.timer?.emomMinutes  ?? 20;
+                    const rounds    = Math.floor(total / interval);
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs text-slate-600 font-medium shrink-0">Every</label>
+                            <input
+                              type="number" min={1} max={10}
+                              value={interval}
+                              onChange={e => updateTimer(i, { emomInterval: Math.max(1, parseInt(e.target.value) || 1) })}
+                              className="w-14 px-2 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-center font-semibold"
+                            />
+                            <span className="text-xs text-slate-500">min</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs text-slate-600 font-medium shrink-0">Total</label>
+                            <input
+                              type="number" min={1} max={120}
+                              value={total}
+                              onChange={e => updateTimer(i, { emomMinutes: Math.max(1, parseInt(e.target.value) || 20) })}
+                              className="w-14 px-2 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-center font-semibold"
+                            />
+                            <span className="text-xs text-slate-500">min</span>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-400">
+                          = {rounds} round{rounds !== 1 ? 's' : ''} · {interval} min each
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {timerMode === 'tabata' && (() => {
+                    const work   = block.timer?.tabataWork   ?? 20;
+                    const rest   = block.timer?.tabataRest   ?? 10;
+                    const rounds = block.timer?.tabataRounds ?? 8;
+                    const totalSec = rounds * (work + rest);
+                    const totalMin = Math.floor(totalSec / 60);
+                    const totalRemSec = totalSec % 60;
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs text-emerald-700 font-medium shrink-0">Work</label>
+                            <input
+                              type="number" min={5} max={300}
+                              value={work}
+                              onChange={e => updateTimer(i, { tabataWork: Math.max(5, parseInt(e.target.value) || 20) })}
+                              className="w-14 px-2 py-1 text-sm border border-emerald-200 bg-emerald-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 text-center font-semibold text-emerald-800"
+                            />
+                            <span className="text-xs text-slate-500">s</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs text-blue-700 font-medium shrink-0">Rest</label>
+                            <input
+                              type="number" min={5} max={300}
+                              value={rest}
+                              onChange={e => updateTimer(i, { tabataRest: Math.max(5, parseInt(e.target.value) || 10) })}
+                              className="w-14 px-2 py-1 text-sm border border-blue-200 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-center font-semibold text-blue-800"
+                            />
+                            <span className="text-xs text-slate-500">s</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-xs text-slate-600 font-medium shrink-0">Rounds</label>
+                            <input
+                              type="number" min={1} max={100}
+                              value={rounds}
+                              onChange={e => updateTimer(i, { tabataRounds: Math.max(1, parseInt(e.target.value) || 8) })}
+                              className="w-14 px-2 py-1 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 text-center font-semibold"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-400">
+                          Total: {totalMin > 0 ? `${totalMin}m ` : ''}{totalRemSec > 0 ? `${totalRemSec}s` : ''}
+                          {' '}· {work}s work / {rest}s rest × {rounds}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {timerMode === 'stopwatch' && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                      <span className="text-sm">🕐</span>
+                      <span>Simple count-up stopwatch — no time limit</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Scaling variants (RX / Scaled / RX+) ── */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Scaling options</span>
+                  <span className="text-[10px] text-slate-400">Describe each level — athletes pick when logging</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {([
+                    { key: 'rxPlus', label: 'RX+', color: 'border-purple-200 bg-purple-50 focus:ring-purple-400', badge: 'bg-purple-100 text-purple-700', emoji: '⚡' },
+                    { key: 'rx',     label: 'RX',  color: 'border-emerald-200 bg-emerald-50 focus:ring-emerald-400', badge: 'bg-emerald-100 text-emerald-700', emoji: '✅' },
+                    { key: 'scaled', label: 'Scaled', color: 'border-amber-200 bg-amber-50 focus:ring-amber-400', badge: 'bg-amber-100 text-amber-700', emoji: '🔧' },
+                  ] as const).map(({ key, label, color, badge, emoji }) => (
+                    <div key={key} className="flex items-start gap-2">
+                      <span className={`mt-1.5 shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${badge}`}>
+                        {emoji} {label}
+                      </span>
+                      <input
+                        type="text"
+                        value={(block.scaling as any)?.[key] ?? ''}
+                        onChange={e => update(i, { scaling: { ...block.scaling, [key]: e.target.value } })}
+                        placeholder={
+                          key === 'rxPlus' ? 'e.g. 100 kg / strict pull-ups'
+                          : key === 'rx'   ? 'e.g. 70 kg / kipping pull-ups'
+                          :                  'e.g. 40 kg / ring rows'
+                        }
+                        className={`flex-1 px-2.5 py-1.5 text-xs border rounded-lg focus:outline-none focus:ring-2 ${color}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          <input value={block.name} onChange={e=>{const b=[...blocks];b[i]={...b[i],name:e.target.value};onChange(b);}}
-            placeholder="e.g. 21-15-9 Thrusters + Pull-ups"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"/>
-          <textarea value={block.description} onChange={e=>{const b=[...blocks];b[i]={...b[i],description:e.target.value};onChange(b);}}
-            placeholder="Description / instructions…" rows={2}
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"/>
-          <input value={block.videoUrl} onChange={e=>{const b=[...blocks];b[i]={...b[i],videoUrl:e.target.value};onChange(b);}}
-            placeholder="Video URL (optional)"
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"/>
-        </div>
-      ))}
-      <button type="button" onClick={() => onChange([...blocks,{name:'',description:'',videoUrl:''}])}
-        className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium">
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => onChange([...blocks, { name: '', description: '', videoUrl: '' }])}
+        className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium"
+      >
         <PlusCircle size={14}/> Add block
       </button>
     </div>
@@ -705,6 +1030,14 @@ function TemplatesList({ onSelect }: { onSelect:(t:any)=>void }) {
     onSuccess: () => qc.invalidateQueries({queryKey:['templates']}),
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: (id:string) => templatesApi.duplicate(id),
+    onSuccess: (res) => {
+      qc.invalidateQueries({queryKey:['templates']});
+      if (res?.data) onSelect(res.data);
+    },
+  });
+
   return (
     <div className="flex flex-col min-h-full">
       <Header title="Workout Templates" subtitle="Build programs and assign them to your athletes"/>
@@ -750,11 +1083,20 @@ function TemplatesList({ onSelect }: { onSelect:(t:any)=>void }) {
                       <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center shrink-0">
                         <ClipboardList size={20} className="text-primary-600"/>
                       </div>
-                      <button
-                        onClick={e=>{e.stopPropagation();if(confirm(`Delete "${t.name}"?`))deleteMutation.mutate(t.id);}}
-                        className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                        <Trash2 size={14}/>
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={e=>{e.stopPropagation();duplicateMutation.mutate(t.id);}}
+                          title="Duplicate template"
+                          disabled={duplicateMutation.isPending}
+                          className="p-1.5 text-slate-300 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
+                          <Copy size={14}/>
+                        </button>
+                        <button
+                          onClick={e=>{e.stopPropagation();if(confirm(`Delete "${t.name}"?`))deleteMutation.mutate(t.id);}}
+                          className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                          <Trash2 size={14}/>
+                        </button>
+                      </div>
                     </div>
                     <h3 className="font-bold text-slate-900 mt-3 text-base">{t.name}</h3>
                     {t.description && (

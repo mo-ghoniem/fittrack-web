@@ -45,31 +45,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient lime/cyan glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 20% 10%, rgba(189,255,46,0.10) 0%, transparent 50%), radial-gradient(circle at 80% 90%, rgba(34,211,238,0.08) 0%, transparent 55%)',
+        }}
+      />
+
+      <div className="w-full max-w-md relative">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-2xl shadow-lg mb-4">
+          <div
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 bg-lime-gradient"
+            style={{ boxShadow: '0 0 30px -4px rgba(189,255,46,0.6)' }}
+          >
             <span className="text-2xl">🏋️</span>
           </div>
-          <h1 className="text-3xl font-bold text-white">FitTrack</h1>
-          <p className="text-primary-200 mt-1 text-sm">Admin Dashboard</p>
+          <h1 className="text-3xl font-bold text-ink tracking-tight">FitTrack</h1>
+          <p className="text-ink-muted mt-1 text-sm">Admin Dashboard</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-1">Sign in</h2>
-          <p className="text-slate-500 text-sm mb-6">Enter your credentials to continue</p>
+        <div className="card-glow rounded-2xl p-8">
+          <h2 className="text-xl font-semibold text-ink mb-1">Sign in</h2>
+          <p className="text-ink-muted text-sm mb-6">Enter your credentials to continue</p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-5">
+            <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3 mb-5">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label className="block text-sm font-medium text-ink mb-1.5">
                 Email address
               </label>
               <input
@@ -78,9 +91,9 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 className={cn(
-                  'w-full px-4 py-2.5 rounded-lg border border-slate-200',
-                  'text-slate-900 placeholder-slate-400 text-sm',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                  'w-full px-4 py-2.5 rounded-lg border border-surface-border bg-surface-700',
+                  'text-ink placeholder:text-ink-subtle text-sm',
+                  'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:border-transparent',
                   'transition-shadow',
                 )}
                 autoComplete="email"
@@ -89,7 +102,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label className="block text-sm font-medium text-ink mb-1.5">
                 Password
               </label>
               <input
@@ -98,9 +111,9 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className={cn(
-                  'w-full px-4 py-2.5 rounded-lg border border-slate-200',
-                  'text-slate-900 placeholder-slate-400 text-sm',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                  'w-full px-4 py-2.5 rounded-lg border border-surface-border bg-surface-700',
+                  'text-ink placeholder:text-ink-subtle text-sm',
+                  'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:border-transparent',
                   'transition-shadow',
                 )}
                 autoComplete="current-password"
@@ -112,10 +125,9 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className={cn(
-                'w-full py-2.5 px-4 rounded-lg font-semibold text-sm text-white',
-                'bg-primary-600 hover:bg-primary-700 active:bg-primary-800',
-                'transition-colors duration-150',
-                'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
+                'btn-lime w-full py-3 px-4 rounded-full font-semibold text-sm',
+                'transition-all duration-150',
+                'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:ring-offset-2 focus:ring-offset-surface-base',
                 loading && 'opacity-70 cursor-not-allowed',
               )}
             >
@@ -124,11 +136,11 @@ export default function LoginPage() {
           </form>
 
           {/* Link to register */}
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm text-ink-muted mt-6">
             Don&apos;t have an account?{' '}
             <Link
               href="/register"
-              className="text-primary-600 font-medium hover:text-primary-700 transition-colors"
+              className="text-primary-300 font-medium hover:text-primary-200 transition-colors"
             >
               Sign up
             </Link>

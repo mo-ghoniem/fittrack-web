@@ -2,20 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   FitTrack — FitLink design system (dark)
+   Premium dark aesthetic, electric lime accents, subtle glowing surfaces.
+   ========================================================================== */
+
 @layer base {
   :root {
-    --background: 248 250 252;
-    --foreground: 15 23 42;
+    --background: 7 8 10;
+    --foreground: 250 250 250;
+
+    --surface-base: #07080a;
+    --surface-900: #0a0b0e;
+    --surface-800: #101114;
+    --surface-700: #17181c;
+    --surface-600: #1f2126;
+    --surface-500: #2a2c33;
+    --surface-border: #1c1e23;
+    --surface-border-strong: #2a2d34;
+
+    --ink: #fafafa;
+    --ink-muted: #9ca0a8;
+    --ink-subtle: #6b6f78;
+
+    --lime: #bdff2e;
+    --lime-strong: #d8ff5c;
+    --cyan: #22d3ee;
+  }
+
+  html,
+  body {
+    background-color: var(--surface-base);
+    color: var(--ink);
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(189, 255, 46, 0.06) 0%, transparent 45%),
+      radial-gradient(circle at 110% 110%, rgba(34, 211, 238, 0.05) 0%, transparent 45%);
+    background-attachment: fixed;
+    @apply antialiased;
   }
 
   * {
-    @apply border-slate-200;
+    border-color: var(--surface-border);
+  }
+
+  /* Force dark form controls to match theme */
+  input,
+  textarea,
+  select {
+    color-scheme: dark;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Global tailwind-class remapping.
+   The app has 20+ screens using slate/white utilities. Rather than touching
+   every file we remap these tokens to the FitLink dark palette, so new
+   pages automatically inherit the theme.
+   -------------------------------------------------------------------------- */
 
 @layer utilities {
   .scrollbar-hide {
@@ -25,4 +71,171 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* FitLink utility: neon lime pill button (hero CTA) */
+  .btn-lime {
+    background-image: linear-gradient(135deg, #d8ff5c 0%, #bdff2e 45%, #a3e60b 100%);
+    color: #0a0b0e;
+    box-shadow: 0 0 0 1px rgba(189, 255, 46, 0.4), 0 0 28px -6px rgba(189, 255, 46, 0.55);
+  }
+  .btn-lime:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 0 0 1px rgba(189, 255, 46, 0.55), 0 0 32px -4px rgba(189, 255, 46, 0.7);
+  }
+
+  /* FitLink utility: a dark card with a subtle lime edge glow */
+  .card-glow {
+    background-color: var(--surface-800);
+    border: 1px solid var(--surface-border);
+    box-shadow:
+      0 0 0 1px rgba(189, 255, 46, 0.06),
+      0 0 24px -12px rgba(189, 255, 46, 0.25),
+      0 10px 30px -18px rgba(0, 0, 0, 0.8);
+  }
+
+  .text-ink { color: var(--ink); }
+  .text-ink-muted { color: var(--ink-muted); }
+  .text-ink-subtle { color: var(--ink-subtle); }
 }
+
+/* --------------------------------------------------------------------------
+   Token remapping. Existing components use a light-theme vocabulary
+   (bg-white, bg-slate-50, text-slate-*, border-slate-*). Because the entire
+   admin dashboard is always dark now, we alias those tokens here so the
+   app inherits the theme without touching every screen.
+   -------------------------------------------------------------------------- */
+
+/* Backgrounds */
+.bg-white        { background-color: var(--surface-800) !important; }
+.bg-slate-50     { background-color: var(--surface-base) !important; }
+.bg-slate-100    { background-color: var(--surface-700) !important; }
+.bg-slate-200    { background-color: var(--surface-600) !important; }
+.bg-slate-800    { background-color: var(--surface-700) !important; }
+.bg-slate-900    { background-color: var(--surface-900) !important; }
+.bg-slate-900\/50 { background-color: rgba(0, 0, 0, 0.6) !important; }
+
+.hover\:bg-slate-50:hover  { background-color: var(--surface-700) !important; }
+.hover\:bg-slate-100:hover { background-color: var(--surface-600) !important; }
+.hover\:bg-slate-800:hover { background-color: var(--surface-600) !important; }
+
+/* Borders */
+.border-slate-100 { border-color: var(--surface-border) !important; }
+.border-slate-200 { border-color: var(--surface-border) !important; }
+.border-slate-300 { border-color: var(--surface-border-strong) !important; }
+.border-slate-700 { border-color: var(--surface-border-strong) !important; }
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--surface-border) !important; }
+.divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--surface-border) !important; }
+
+/* Text — slate greys become the ink ladder */
+.text-slate-400 { color: var(--ink-subtle) !important; }
+.text-slate-500 { color: var(--ink-muted) !important; }
+.text-slate-600 { color: var(--ink-muted) !important; }
+.text-slate-700 { color: #c6c9d1 !important; }
+.text-slate-800 { color: var(--ink) !important; }
+.text-slate-900 { color: var(--ink) !important; }
+
+.placeholder-slate-400::placeholder { color: var(--ink-dim, #4a4d54) !important; }
+
+/* Soft tinted chips (bg-*-50 / bg-*-100 / text-*-600/700) — give them a
+   dark, translucent treatment that still reads as the accent colour. */
+.bg-emerald-50   { background-color: rgba(16, 185, 129, 0.10) !important; }
+.bg-emerald-100  { background-color: rgba(16, 185, 129, 0.15) !important; }
+.bg-emerald-600\/20 { background-color: rgba(16, 185, 129, 0.18) !important; }
+.text-emerald-600 { color: #34d399 !important; }
+.text-emerald-700 { color: #34d399 !important; }
+.text-emerald-300 { color: #6ee7b7 !important; }
+
+.bg-violet-50    { background-color: rgba(139, 92, 246, 0.10) !important; }
+.bg-violet-100   { background-color: rgba(139, 92, 246, 0.15) !important; }
+.text-violet-600 { color: #a78bfa !important; }
+.text-violet-700 { color: #a78bfa !important; }
+
+.bg-orange-50    { background-color: rgba(249, 115, 22, 0.10) !important; }
+.bg-orange-100   { background-color: rgba(249, 115, 22, 0.15) !important; }
+.text-orange-600 { color: #fb923c !important; }
+.text-orange-700 { color: #fb923c !important; }
+
+.bg-amber-100    { background-color: rgba(245, 158, 11, 0.15) !important; }
+.text-amber-700  { color: #fbbf24 !important; }
+
+.bg-red-50       { background-color: rgba(239, 68, 68, 0.10) !important; }
+.bg-red-100      { background-color: rgba(239, 68, 68, 0.15) !important; }
+.text-red-600    { color: #f87171 !important; }
+.text-red-700    { color: #f87171 !important; }
+.border-red-200  { border-color: rgba(239, 68, 68, 0.35) !important; }
+.hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.12) !important; }
+
+/* Blue / rose tints for notification chips */
+.bg-blue-50      { background-color: rgba(59, 130, 246, 0.10) !important; }
+.bg-blue-100     { background-color: rgba(59, 130, 246, 0.18) !important; }
+.bg-blue-50\/40  { background-color: rgba(59, 130, 246, 0.08) !important; }
+.hover\:bg-blue-50\/70:hover { background-color: rgba(59, 130, 246, 0.12) !important; }
+.text-blue-600   { color: #60a5fa !important; }
+
+.bg-rose-50      { background-color: rgba(244, 63, 94, 0.10) !important; }
+.bg-rose-100     { background-color: rgba(244, 63, 94, 0.18) !important; }
+.text-rose-600   { color: #fb7185 !important; }
+.text-rose-700   { color: #fb7185 !important; }
+
+.border-blue-100    { border-color: rgba(59, 130, 246, 0.28) !important; }
+.border-violet-100  { border-color: rgba(139, 92, 246, 0.28) !important; }
+.border-amber-100   { border-color: rgba(245, 158, 11, 0.28) !important; }
+.border-orange-100  { border-color: rgba(249, 115, 22, 0.28) !important; }
+.border-emerald-100 { border-color: rgba(16, 185, 129, 0.28) !important; }
+.border-rose-100    { border-color: rgba(244, 63, 94, 0.28) !important; }
+.border-slate-100   { border-color: var(--surface-border) !important; }
+
+/* Scrollbars — match the dark theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-600);
+  border-radius: 8px;
+  border: 2px solid var(--surface-base);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-500);
+}
+
+/* Selection */
+::selection {
+  background: rgba(189, 255, 46, 0.35);
+  color: #0a0b0e;
+}
+
+/* --------------------------------------------------------------------------
+   Primary button polish: existing `bg-primary-600 text-white` buttons get a
+   lime-gradient background + dark text + subtle glow, matching the Figma
+   "Start Workout" CTA.
+   -------------------------------------------------------------------------- */
+.bg-primary-600 {
+  background-image: linear-gradient(135deg, #d8ff5c 0%, #bdff2e 45%, #a3e60b 100%);
+  background-color: #bdff2e !important;
+  box-shadow: 0 0 0 1px rgba(189, 255, 46, 0.35), 0 0 20px -6px rgba(189, 255, 46, 0.5);
+}
+.bg-primary-600.text-white,
+.bg-primary-600 .text-white {
+  color: #0a0b0e !important;
+}
+.hover\:bg-primary-700:hover {
+  filter: brightness(1.05);
+  background-image: linear-gradient(135deg, #d8ff5c 0%, #bdff2e 45%, #a3e60b 100%);
+}
+.active\:bg-primary-800:active {
+  filter: brightness(0.95);
+}
+
+/* Soft lime chips (bg-primary-100 + text-primary-700) */
+.bg-primary-50  { background-color: rgba(189, 255, 46, 0.08) !important; }
+.bg-primary-100 { background-color: rgba(189, 255, 46, 0.15) !important; }
+.text-primary-200 { color: #e6ff99 !important; }
+.text-primary-600 { color: #bdff2e !important; }
+.text-primary-700 { color: #bdff2e !important; }
+.border-primary-500, .border-primary-600 { border-color: #bdff2e !important; }
+.hover\:bg-primary-50:hover { background-color: rgba(189, 255, 46, 0.10) !important; }
+.hover\:text-primary-700:hover { color: #d8ff5c !important; }

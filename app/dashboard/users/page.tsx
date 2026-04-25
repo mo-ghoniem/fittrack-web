@@ -6,7 +6,7 @@ import { Search, UserCircle, Mail, Calendar } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Badge } from '@/components/ui/Badge';
 import { Table, Thead, Tbody, Th, Td, Tr } from '@/components/ui/Table';
-import { CoachGuard } from '@/components/layout/CoachGuard';
+import { AdminGuard } from '@/components/layout/AdminGuard';
 import { supabase } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
 
@@ -59,7 +59,7 @@ export default function UsersPage() {
   const users = data?.users ?? [];
 
   return (
-    <CoachGuard>
+    <AdminGuard>
     <div className="flex flex-col min-h-full">
       <Header title="Users" subtitle={`${data?.total ?? 0} registered users`} />
 
@@ -144,6 +144,6 @@ export default function UsersPage() {
         </div>
       </main>
     </div>
-    </CoachGuard>
+    </AdminGuard>
   );
 }

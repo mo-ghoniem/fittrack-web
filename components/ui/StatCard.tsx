@@ -10,22 +10,19 @@ interface StatCardProps {
   color?: 'blue' | 'green' | 'purple' | 'orange';
 }
 
+// FitLink dark palette — each accent stays vivid against the dark surface.
 const colorMap = {
   blue: {
-    bg: 'bg-primary-50',
-    icon: 'bg-primary-100 text-primary-600',
+    icon: 'bg-accent-400/15 text-accent-300 ring-1 ring-accent-400/30',
   },
   green: {
-    bg: 'bg-emerald-50',
-    icon: 'bg-emerald-100 text-emerald-600',
+    icon: 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30',
   },
   purple: {
-    bg: 'bg-violet-50',
-    icon: 'bg-violet-100 text-violet-600',
+    icon: 'bg-violet-400/15 text-violet-300 ring-1 ring-violet-400/30',
   },
   orange: {
-    bg: 'bg-orange-50',
-    icon: 'bg-orange-100 text-orange-600',
+    icon: 'bg-orange-400/15 text-orange-300 ring-1 ring-orange-400/30',
   },
 };
 
@@ -40,26 +37,26 @@ export function StatCard({
   const colors = colorMap[color];
 
   return (
-    <div className={cn('rounded-xl p-5 border border-slate-200 bg-white shadow-sm')}>
+    <div className="card-glow rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
       <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', colors.icon)}>
+        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', colors.icon)}>
           <Icon size={20} strokeWidth={1.8} />
         </div>
         {change && (
           <span
             className={cn(
-              'text-xs font-semibold px-2 py-0.5 rounded-full',
-              changeType === 'up' && 'bg-emerald-100 text-emerald-700',
-              changeType === 'down' && 'bg-red-100 text-red-700',
-              changeType === 'neutral' && 'bg-slate-100 text-slate-600',
+              'text-xs font-semibold px-2 py-0.5 rounded-full ring-1',
+              changeType === 'up' && 'bg-primary-400/15 text-primary-300 ring-primary-400/30',
+              changeType === 'down' && 'bg-red-500/15 text-red-300 ring-red-500/30',
+              changeType === 'neutral' && 'bg-surface-600 text-ink-muted ring-surface-border-strong',
             )}
           >
             {change}
           </span>
         )}
       </div>
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="text-sm text-slate-500 mt-0.5">{label}</p>
+      <p className="text-2xl font-bold text-ink tracking-tight">{value}</p>
+      <p className="text-sm text-ink-muted mt-0.5">{label}</p>
     </div>
   );
 }

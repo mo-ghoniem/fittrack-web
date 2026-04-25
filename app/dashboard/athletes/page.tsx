@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   UserPlus, Trash2, Loader2, Check, X, Mail, Users,
-  Link2, Copy, MessageCircle, RefreshCw, CheckCheck,
+  Link2, Copy, MessageCircle, RefreshCw, CheckCheck, ChevronRight,
+  StickyNote, ChevronDown,
 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { CoachGuard } from '@/components/layout/CoachGuard';
@@ -226,6 +228,8 @@ export default function AthletesPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [addEmail, setAddEmail] = useState('');
   const [addError, setAddError] = useState('');
+  // Per-athlete notes state: { [relationshipId]: { open, draft } }
+  const [notesState, setNotesState] = useState<Record<string, { open: boolean; draft: string }>>({});
 
   /* ── Data queries ── */
   const { data: athletesData, isLoading } = useQuery({
@@ -261,6 +265,25 @@ export default function AthletesPage() {
     mutationFn: (relationshipId: string) => coachingApi.removeAthlete(relationshipId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-athletes'] }),
   });
+
+  const notesMutation = useMutation({
+    mutationFn: ({ relationshipId, notes }: { relationshipId: string; notes: string }) =>
+      coachingApi.updateAthleteNotes(relationshipId, notes),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-athletes'] }),
+  });
+
+  const toggleNotes = (athleteRelId: string, currentNotes: string) => {
+    setNotesState(prev => {
+      const cur = prev[athleteRelId];
+      if (!cur) return { ...prev, [athleteRelId]: { open: true, draft: currentNotes } };
+      return { ...prev, [athleteRelId]: { ...cur, open: !cur.open } };
+    });
+  };
+
+  const saveNotes = (athleteRelId: string) => {
+    const draft = notesState[athleteRelId]?.draft ?? '';
+    notesMutation.mutate({ relationshipId: athleteRelId, notes: draft });
+  };
 
   const acceptMutation = useMutation({
     mutationFn: (requestId: string) => coachingApi.acceptRequest(requestId),
@@ -306,8 +329,9 @@ export default function AthletesPage() {
                 {pendingReceived.map((req: any) => (
                   <div
                     key={req.relationshipId}
-                    className="flex items-center gap-3 bg-white rounded-lg px-4 py-3 border border-amber-100"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white rounded-lg px-4 py-3 border border-amber-100"
                   >
+                    <div className="flex items-center gap-3 w-full sm:w-auto flex-1 min-w-0">
                     <AthleteAvatar name={req.profile?.name ?? req.otherUserId} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900">
@@ -317,7 +341,8 @@ export default function AthletesPage() {
                         Requested {formatDate(req.requestedAt)}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    </div>
+                    <div className="flex gap-2 mt-2 sm:mt-0">
                       <button
                         onClick={() => acceptMutation.mutate(req.relationshipId)}
                         disabled={acceptMutation.isPending}
@@ -341,14 +366,14 @@ export default function AthletesPage() {
 
           {/* Athletes list */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+            <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="font-semibold text-slate-900">Active Athletes</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Athletes currently under your coaching
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 sm:mt-0">
                 <button
                   onClick={() => setShowInviteModal(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors"
@@ -398,35 +423,103 @@ export default function AthletesPage() {
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {athletes.map((athlete: any) => (
-                  <div
-                    key={athlete.relationshipId}
-                    className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <AthleteAvatar name={athlete.profile?.name ?? athlete.athleteId} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {athlete.profile?.name ?? 'Unknown'}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Coaching since {formatDate(athlete.coachingSince)}
-                      </p>
+                {athletes.map((athlete: any) => {
+                  const ns = notesState[athlete.relationshipId];
+                  const notesOpen = ns?.open ?? false;
+                  const notesDraft = ns?.draft ?? (athlete.coachNotes ?? '');
+                  return (
+                    <div key={athlete.relationshipId} className="hover:bg-slate-50 transition-colors">
+                      {/* Athlete row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4">
+                        <Link
+                          href={`/dashboard/athletes/${athlete.athleteId}`}
+                          className="flex items-center gap-4 flex-1 min-w-0"
+                        >
+                          <AthleteAvatar name={athlete.profile?.name ?? athlete.athleteId} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {athlete.profile?.name ?? 'Unknown'}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Coaching since {formatDate(athlete.coachingSince)}
+                            </p>
+                            {athlete.coachNotes && !notesOpen && (
+                              <p className="text-xs text-amber-600 mt-0.5 italic truncate max-w-xs">
+                                📝 {athlete.coachNotes}
+                              </p>
+                            )}
+                          </div>
+                          <Badge variant="success">Active</Badge>
+                          <ChevronRight size={16} className="text-slate-300 shrink-0" />
+                        </Link>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Private notes toggle */}
+                          <button
+                            onClick={() => toggleNotes(athlete.relationshipId, athlete.coachNotes ?? '')}
+                            title="Private coaching notes"
+                            className={`p-2 rounded-lg transition-colors ${
+                              notesOpen || athlete.coachNotes
+                                ? 'text-amber-500 bg-amber-50 hover:bg-amber-100'
+                                : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'
+                            }`}
+                          >
+                            <StickyNote size={15} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Remove ${athlete.profile?.name ?? 'this athlete'} from your roster?`)) {
+                                removeMutation.mutate(athlete.relationshipId);
+                              }
+                            }}
+                            disabled={removeMutation.isPending}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
+                            title="Remove athlete"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Inline notes section */}
+                      {notesOpen && (
+                        <div className="px-5 pb-4 pt-0">
+                          <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-2">
+                            <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">
+                              Private coaching notes · only you can see this
+                            </p>
+                            <textarea
+                              value={notesDraft}
+                              onChange={(e) =>
+                                setNotesState(prev => ({
+                                  ...prev,
+                                  [athlete.relationshipId]: { open: true, draft: e.target.value },
+                                }))
+                              }
+                              placeholder="e.g. knee injury — avoid heavy squats. Prefers 6am class. Working on pull-up kip…"
+                              rows={3}
+                              className="w-full px-3 py-2 text-sm border border-amber-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                            />
+                            <div className="flex items-center gap-2 justify-end">
+                              <button
+                                onClick={() => toggleNotes(athlete.relationshipId, athlete.coachNotes ?? '')}
+                                className="text-xs text-slate-400 hover:text-slate-600"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => { saveNotes(athlete.relationshipId); toggleNotes(athlete.relationshipId, notesDraft); }}
+                                disabled={notesMutation.isPending}
+                                className="px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors disabled:opacity-40"
+                              >
+                                {notesMutation.isPending ? 'Saving…' : 'Save Notes'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <Badge variant="success">Active</Badge>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Remove ${athlete.profile?.name ?? 'this athlete'} from your roster?`)) {
-                          removeMutation.mutate(athlete.relationshipId);
-                        }
-                      }}
-                      disabled={removeMutation.isPending}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40"
-                      title="Remove athlete"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
