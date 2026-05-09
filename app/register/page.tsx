@@ -31,8 +31,9 @@ export default function RegisterPage() {
             return;
         }
 
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters.');
+        // Bug #8 fix: align with backend @MinLength(8) in RegisterDto.
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters.');
             return;
         }
 
