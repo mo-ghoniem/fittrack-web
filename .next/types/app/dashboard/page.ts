@@ -1,4 +1,4 @@
-// File: D:\Projects\Fit-Track-New\web\app\dashboard\page.tsx
+// File: D:\TrackApp\fittrack-web\app\dashboard\page.tsx
 import * as entry from '../../../../app/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
