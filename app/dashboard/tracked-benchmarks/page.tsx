@@ -59,11 +59,11 @@ const SCORE_TYPE_LABELS: Record<ScoreType, string> = {
   rounds: 'Rounds',
 };
 
-const SCORE_TYPE_COLORS: Record<ScoreType, string> = {
-  weight: 'blue',
-  time: 'orange',
-  reps: 'green',
-  rounds: 'purple',
+const SCORE_TYPE_VARIANTS: Record<ScoreType, 'info' | 'warning' | 'success' | 'default'> = {
+  weight: 'info',
+  time: 'warning',
+  reps: 'success',
+  rounds: 'default',
 };
 
 // ─── Create Form ──────────────────────────────────────────────────────────────
@@ -332,7 +332,7 @@ function LeaderboardPanel({ benchmarkId }: { benchmarkId: string }) {
               <span className="font-bold text-primary-300">{entry.bestScore}</span>
             </Td>
             <Td>
-              <Badge color={entry.isRx ? 'green' : 'gray'}>
+              <Badge variant={entry.isRx ? 'success' : 'default'}>
                 {entry.isRx ? 'Rx' : 'Scaled'}
               </Badge>
             </Td>
@@ -373,7 +373,7 @@ function BenchmarkRow({
           </div>
         </Td>
         <Td>
-          <Badge color={SCORE_TYPE_COLORS[benchmark.score_type] as any}>
+          <Badge variant={SCORE_TYPE_VARIANTS[benchmark.score_type]}>
             {SCORE_TYPE_LABELS[benchmark.score_type]}
           </Badge>
         </Td>
@@ -400,7 +400,7 @@ function BenchmarkRow({
           </div>
         </Td>
         <Td>
-          <Badge color={benchmark.is_active ? 'green' : 'gray'}>
+          <Badge variant={benchmark.is_active ? 'success' : 'default'}>
             {benchmark.is_active ? 'Active' : 'Inactive'}
           </Badge>
         </Td>
