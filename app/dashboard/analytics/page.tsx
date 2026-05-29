@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { statsApi } from '@/lib/api';
 
 type Period = '7d' | '30d' | '3m' | '1y';
-
+//avaialble periods are 7d, 30d, 3m, 1y
 const PERIODS: { key: Period; label: string }[] = [
   { key: '7d', label: '7 Days' },
   { key: '30d', label: '30 Days' },
