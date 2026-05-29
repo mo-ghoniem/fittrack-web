@@ -3,8 +3,13 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'FitTrack Admin',
-  description: 'FitTrack fitness platform — admin dashboard',
+  title: 'FitTrack',
+  description: 'FitTrack — your personal fitness tracking dashboard.',
+  openGraph: {
+    title: 'FitTrack',
+    description: 'FitTrack — your personal fitness tracking dashboard.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
