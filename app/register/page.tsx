@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-export default function RegisterPage() {
+function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirect = searchParams.get('redirect');
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                                         'flex flex-col items-center gap-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all duration-150',
                                         persona === 'athlete'
                                             ? 'border-primary-400 bg-primary-400/10 text-primary-300'
-                                            : 'border-surface-border text-ink-muted hover:border-surface-border-strong',
+                                             : 'border-surface-border text-ink-muted hover:border-surface-border-strong',
                                     )}
                                 >
                                     <span className="text-xl">💪</span>
@@ -259,5 +259,17 @@ export default function RegisterPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center p-4 relative overflow-hidden">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-400" />
+            </div>
+        }>
+            <RegisterContent />
+        </Suspense>
     );
 }
