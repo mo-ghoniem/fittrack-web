@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, Suspense } from 'react';
+import { useState, useEffect, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
@@ -13,8 +13,24 @@ function LoginContent() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setChecking(false), 3000);
+    supabase.auth.getSession().then(({ data }) => {
+      clearTimeout(timeout);
+      if (data.session) {
+        router.replace(redirect ?? '/dashboard');
+      } else {
+        setChecking(false);
+      }
+    }).catch(() => {
+      clearTimeout(timeout);
+      setChecking(false);
+    });
+  }, [router, redirect]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,7 +39,7 @@ function LoginContent() {
       return;
     }
     setError('');
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
@@ -40,9 +56,17 @@ function LoginContent() {
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-surface-base flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center p-4 relative overflow-hidden">
@@ -123,15 +147,15 @@ function LoginContent() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting}
               className={cn(
                 'btn-lime w-full py-3 px-4 rounded-full font-semibold text-sm',
                 'transition-all duration-150',
                 'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:ring-offset-2 focus:ring-offset-surface-base',
-                loading && 'opacity-70 cursor-not-allowed',
+                submitting && 'opacity-70 cursor-not-allowed',
               )}
             >
-              {loading ? 'Signing in…' : 'Sign in'}
+              {submitting ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
