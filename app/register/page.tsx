@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 function RegisterContent() {
     const router = useRouter();
@@ -31,7 +32,6 @@ function RegisterContent() {
             return;
         }
 
-        // Bug #8 fix: align with backend @MinLength(8) in RegisterDto.
         if (password.length < 8) {
             setError('Password must be at least 8 characters.');
             return;
@@ -41,14 +41,13 @@ function RegisterContent() {
         setLoading(true);
 
         try {
-            // Sign up via Supabase Auth — store role in user_metadata
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email.trim(),
                 password,
                 options: {
                     data: {
                         name: name.trim(),
-                        role: persona,          // used by useUserRole hook
+                        role: persona,
                         initialPersona: persona,
                     },
                 },
@@ -59,7 +58,6 @@ function RegisterContent() {
                 return;
             }
 
-            // Also persist role to profiles table so the backend CoachGuard works
             if (authData.user) {
                 await supabase.from('profiles').upsert({
                     id: authData.user.id,
@@ -69,7 +67,6 @@ function RegisterContent() {
                 }, { onConflict: 'id' });
             }
 
-            // Redirect to the original page (e.g. /join/TOKEN) or dashboard
             router.push(redirect ?? '/dashboard');
         } catch {
             setError('An unexpected error occurred. Please try again.');
@@ -78,181 +75,146 @@ function RegisterContent() {
         }
     };
 
+    const personaOptions: { value: 'athlete' | 'coach'; emoji: string; title: string; desc: string }[] = [
+        { value: 'athlete', emoji: '💪', title: 'Athlete', desc: 'Log workouts & track PRs' },
+        { value: 'coach', emoji: '📋', title: 'Coach', desc: 'Manage athletes & programs' },
+    ];
+
+    const inputCls = cn(
+        'w-full px-4 py-3 rounded-xl text-sm transition-all',
+        'text-ink placeholder:text-ink-subtle',
+        'focus:outline-none focus:ring-2 focus:ring-primary-400/50',
+    );
+    const inputStyle = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' };
+
     return (
-        <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center p-4 relative overflow-hidden">
-            <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0"
-                style={{
-                    backgroundImage:
-                        'radial-gradient(circle at 20% 10%, rgba(189,255,46,0.10) 0%, transparent 50%), radial-gradient(circle at 80% 90%, rgba(34,211,238,0.08) 0%, transparent 55%)',
-                }}
-            />
-            <div className="w-full max-w-md relative">
+        <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center p-6 relative overflow-hidden">
+            {/* Ambient */}
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div
+                    className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-25"
+                    style={{ background: 'radial-gradient(circle, rgba(189,255,46,0.15) 0%, transparent 70%)' }}
+                />
+                <div
+                    className="absolute -bottom-40 -left-20 w-[400px] h-[400px] rounded-full opacity-15"
+                    style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%)' }}
+                />
+                <div className="absolute inset-0 dot-grid opacity-30" />
+            </div>
+
+            <div className="w-full max-w-md relative animate-fade-in">
                 {/* Logo */}
-                <div className="text-center mb-8">
+                <div className="flex items-center justify-center gap-3 mb-8">
                     <div
-                        className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 bg-lime-gradient"
-                        style={{ boxShadow: '0 0 30px -4px rgba(189,255,46,0.6)' }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-lime-gradient"
+                        style={{ boxShadow: '0 0 24px -4px rgba(189,255,46,0.7)' }}
                     >
-                        <span className="text-2xl">🏋️</span>
+                        <Zap size={20} style={{ color: '#0a0b0e' }} strokeWidth={2.5} />
                     </div>
-                    <h1 className="text-3xl font-bold text-ink tracking-tight">FitTrack</h1>
-                    <p className="text-ink-muted mt-1 text-sm">Create your account</p>
+                    <span className="text-xl font-extrabold tracking-tight">FitTrack</span>
                 </div>
 
-                {/* Card */}
-                <div className="card-glow rounded-2xl p-8">
-                    <h2 className="text-xl font-semibold text-ink mb-1">Sign up</h2>
-                    <p className="text-ink-muted text-sm mb-6">Fill in your details to get started</p>
+                <div
+                    className="rounded-3xl p-8"
+                    style={{
+                        background: 'rgba(16,17,20,0.9)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: '0 32px 80px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(189,255,46,0.06)',
+                        backdropFilter: 'blur(20px)',
+                    }}
+                >
+                    <h1 className="text-2xl font-extrabold text-ink tracking-tight mb-1">Create account</h1>
+                    <p className="text-ink-muted text-sm mb-7">Join FitTrack and start crushing your goals</p>
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/30 text-red-300 text-sm rounded-lg px-4 py-3 mb-5">
+                        <div className="bg-red-500/10 border border-red-500/25 text-red-300 text-sm rounded-xl px-4 py-3 mb-5">
                             {error}
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Name */}
-                        <div>
-                            <label className="block text-sm font-medium text-ink mb-1.5">
-                                Full name
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="John Doe"
-                                className={cn(
-                                    'w-full px-4 py-2.5 rounded-lg border border-surface-border bg-surface-700',
-                                    'text-ink placeholder:text-ink-subtle text-sm',
-                                    'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:border-transparent',
-                                    'transition-shadow',
-                                )}
-                                autoComplete="name"
-                                required
-                            />
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                            <label className="block text-sm font-medium text-ink mb-1.5">
-                                Email address
-                            </label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                className={cn(
-                                    'w-full px-4 py-2.5 rounded-lg border border-surface-border bg-surface-700',
-                                    'text-ink placeholder:text-ink-subtle text-sm',
-                                    'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:border-transparent',
-                                    'transition-shadow',
-                                )}
-                                autoComplete="email"
-                                required
-                            />
-                        </div>
-
                         {/* Persona selector */}
+                        <div className="grid grid-cols-2 gap-3 mb-2">
+                            {personaOptions.map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setPersona(opt.value)}
+                                    className={cn(
+                                        'relative flex flex-col items-center gap-1 py-4 px-3 rounded-2xl text-sm font-semibold transition-all duration-200',
+                                        persona === opt.value
+                                            ? 'text-surface-900'
+                                            : 'text-ink-muted hover:text-ink',
+                                    )}
+                                    style={persona === opt.value ? {
+                                        background: 'linear-gradient(135deg, #d8ff5c 0%, #bdff2e 100%)',
+                                        boxShadow: '0 0 20px -4px rgba(189,255,46,0.5)',
+                                    } : {
+                                        background: 'rgba(255,255,255,0.03)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                    }}
+                                >
+                                    {persona === opt.value && (
+                                        <CheckCircle2 size={14} className="absolute top-2 right-2 opacity-70" strokeWidth={2.5} />
+                                    )}
+                                    <span className="text-2xl">{opt.emoji}</span>
+                                    <span>{opt.title}</span>
+                                    <span className={cn('text-[10px] font-normal', persona === opt.value ? 'text-surface-900/70' : 'text-ink-subtle')}>
+                                        {opt.desc}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-ink mb-1.5">
-                                I am a…
-                            </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setPersona('athlete')}
-                                    className={cn(
-                                        'flex flex-col items-center gap-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all duration-150',
-                                        persona === 'athlete'
-                                            ? 'border-primary-400 bg-primary-400/10 text-primary-300'
-                                             : 'border-surface-border text-ink-muted hover:border-surface-border-strong',
-                                    )}
-                                >
-                                    <span className="text-xl">💪</span>
-                                    Athlete
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setPersona('coach')}
-                                    className={cn(
-                                        'flex flex-col items-center gap-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all duration-150',
-                                        persona === 'coach'
-                                            ? 'border-primary-400 bg-primary-400/10 text-primary-300'
-                                            : 'border-surface-border text-ink-muted hover:border-surface-border-strong',
-                                    )}
-                                >
-                                    <span className="text-xl">📋</span>
-                                    Coach
-                                </button>
+                            <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-2">Full name</label>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className={inputCls} style={inputStyle} autoComplete="name" required />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-2">Email</label>
+                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputCls} style={inputStyle} autoComplete="email" required />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-2">Password</label>
+                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 8 chars" className={inputCls} style={inputStyle} autoComplete="new-password" required />
                             </div>
-                        </div>
-
-                        {/* Password */}
-                        <div>
-                            <label className="block text-sm font-medium text-ink mb-1.5">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                className={cn(
-                                    'w-full px-4 py-2.5 rounded-lg border border-surface-border bg-surface-700',
-                                    'text-ink placeholder:text-ink-subtle text-sm',
-                                    'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:border-transparent',
-                                    'transition-shadow',
-                                )}
-                                autoComplete="new-password"
-                                required
-                            />
-                        </div>
-
-                        {/* Confirm Password */}
-                        <div>
-                            <label className="block text-sm font-medium text-ink mb-1.5">
-                                Confirm password
-                            </label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="••••••••"
-                                className={cn(
-                                    'w-full px-4 py-2.5 rounded-lg border border-surface-border bg-surface-700',
-                                    'text-ink placeholder:text-ink-subtle text-sm',
-                                    'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:border-transparent',
-                                    'transition-shadow',
-                                )}
-                                autoComplete="new-password"
-                                required
-                            />
+                            <div>
+                                <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-2">Confirm</label>
+                                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={inputCls} style={inputStyle} autoComplete="new-password" required />
+                            </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
                             className={cn(
-                                'btn-lime w-full py-3 px-4 rounded-full font-semibold text-sm',
-                                'transition-all duration-150',
+                                'btn-lime w-full py-3.5 px-4 rounded-2xl font-bold text-sm',
+                                'flex items-center justify-center gap-2',
+                                'transition-all duration-200 mt-2',
                                 'focus:outline-none focus:ring-2 focus:ring-primary-400/60 focus:ring-offset-2 focus:ring-offset-surface-base',
                                 loading && 'opacity-70 cursor-not-allowed',
                             )}
                         >
-                            {loading ? 'Creating account…' : 'Create account'}
+                            {loading ? (
+                                <>
+                                    <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+                                    Creating account…
+                                </>
+                            ) : (
+                                <>
+                                    Create account
+                                    <ArrowRight size={16} strokeWidth={2.5} />
+                                </>
+                            )}
                         </button>
                     </form>
 
-                    {/* Link to login */}
                     <p className="text-center text-sm text-ink-muted mt-6">
                         Already have an account?{' '}
-                        <Link
-                            href="/login"
-                            className="text-primary-300 font-medium hover:text-primary-200 transition-colors"
-                        >
+                        <Link href="/login" className="text-primary-300 font-semibold hover:text-primary-200 transition-colors">
                             Sign in
                         </Link>
                     </p>
@@ -265,8 +227,8 @@ function RegisterContent() {
 export default function RegisterPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center p-4 relative overflow-hidden">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-400" />
+            <div className="min-h-screen bg-surface-base text-ink flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full animate-spin" style={{ border: '2px solid rgba(189,255,46,0.2)', borderTopColor: '#bdff2e' }} />
             </div>
         }>
             <RegisterContent />
