@@ -17,11 +17,8 @@ const variantMap: Record<BadgeVariant, string> = {
   warning: 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30',
   error: 'bg-red-500/15 text-red-300 ring-1 ring-red-500/30',
   info: 'bg-accent-400/15 text-accent-300 ring-1 ring-accent-400/30',
-<<<<<<< HEAD
-=======
   lime: 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30',
   violet: 'bg-violet-400/15 text-violet-300 ring-1 ring-violet-400/30',
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
 };
 
 const dotColorMap: Record<BadgeVariant, string> = {

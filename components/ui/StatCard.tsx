@@ -13,19 +13,6 @@ interface StatCardProps {
 
 // FitLink dark palette — each accent stays vivid against the dark surface.
 const colorMap = {
-<<<<<<< HEAD
-  blue: {
-    icon: 'bg-accent-400/15 text-accent-300 ring-1 ring-accent-400/30',
-  },
-  green: {
-    icon: 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30',
-  },
-  purple: {
-    icon: 'bg-violet-400/15 text-violet-300 ring-1 ring-violet-400/30',
-  },
-  orange: {
-    icon: 'bg-orange-400/15 text-orange-300 ring-1 ring-orange-400/30',
-=======
   lime: {
     icon: 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30',
     accent: 'rgba(189,255,46,0.12)',
@@ -61,7 +48,6 @@ const colorMap = {
     icon: 'bg-violet-400/15 text-violet-300 ring-1 ring-violet-400/30',
     accent: 'rgba(167,139,250,0.10)',
     border: 'rgba(167,139,250,0.18)',
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
   },
 };
 
@@ -76,11 +62,6 @@ export function StatCard({
   const colors = colorMap[color];
 
   return (
-<<<<<<< HEAD
-    <div className="card-glow rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
-      <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', colors.icon)}>
-=======
     <div
       className="rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-elevated cursor-default group"
       style={{
@@ -91,7 +72,6 @@ export function StatCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110', colors.icon)}>
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
           <Icon size={20} strokeWidth={1.8} />
         </div>
         {change && (
@@ -107,11 +87,7 @@ export function StatCard({
           </span>
         )}
       </div>
-<<<<<<< HEAD
-      <p className="text-2xl font-bold text-ink tracking-tight">{value}</p>
-=======
       <p className="text-2xl font-bold text-ink tracking-tight tabular-nums">{value}</p>
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
       <p className="text-sm text-ink-muted mt-0.5">{label}</p>
     </div>
   );

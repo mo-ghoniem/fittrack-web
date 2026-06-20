@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, LogOut, Settings } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -53,12 +53,6 @@ export function Header({ title, subtitle }: HeaderProps) {
   };
 
   return (
-<<<<<<< HEAD
-    <header className="h-16 bg-surface-900/70 backdrop-blur-md border-b border-surface-border flex items-center justify-between pl-16 pr-4 sm:px-6 shrink-0">
-      <div>
-        <h1 className="text-lg font-semibold text-ink tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-ink-muted">{subtitle}</p>}
-=======
     <header
       className="h-16 flex items-center justify-between pl-16 pr-4 sm:px-6 shrink-0 sticky top-0 z-30"
       style={{
@@ -71,7 +65,6 @@ export function Header({ title, subtitle }: HeaderProps) {
       <div className="animate-fade-in">
         <h1 className="text-lg font-bold text-ink tracking-tight leading-tight">{title}</h1>
         {subtitle && <p className="text-xs text-ink-subtle mt-0.5">{subtitle}</p>}
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
       </div>
 
       <div className="flex items-center gap-2">
@@ -81,32 +74,6 @@ export function Header({ title, subtitle }: HeaderProps) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-<<<<<<< HEAD
-            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-surface-700 transition-colors"
-          >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-surface-900 text-xs font-bold shrink-0 bg-lime-gradient"
-              style={{ boxShadow: '0 0 14px -3px rgba(189,255,46,0.55)' }}
-            >
-              {initials}
-            </div>
-            {!loading && (
-              <span className="hidden sm:block text-sm font-medium text-ink max-w-[120px] truncate">
-                {userName || userEmail}
-              </span>
-            )}
-            <ChevronDown size={14} className="text-ink-subtle hidden sm:block" />
-          </button>
-
-          {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-60 bg-surface-800 rounded-xl border border-surface-border shadow-card-dark z-50 py-1 overflow-hidden">
-              {/* User info */}
-              <div className="px-4 py-3 border-b border-surface-border">
-                <p className="text-sm font-semibold text-ink truncate">
-                  {userName || 'User'}
-                </p>
-                <p className="text-xs text-ink-muted truncate">{userEmail}</p>
-=======
             className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-surface-700 transition-all duration-150"
           >
             <Avatar name={displayName} size={32} />
@@ -141,7 +108,6 @@ export function Header({ title, subtitle }: HeaderProps) {
                     <p className="text-xs text-ink-muted truncate">{userEmail}</p>
                   </div>
                 </div>
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
                 {!loading && (
                   <span
                     className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -168,11 +134,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 </Link>
                 <button
                   onClick={handleSignOut}
-<<<<<<< HEAD
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-=======
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all duration-150"
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
                 >
                   <LogOut size={15} strokeWidth={1.8} />
                   Sign out

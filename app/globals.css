@@ -93,11 +93,6 @@
       0 10px 30px -18px rgba(0, 0, 0, 0.8);
   }
 
-<<<<<<< HEAD
-  .text-ink { color: var(--ink); }
-  .text-ink-muted { color: var(--ink-muted); }
-  .text-ink-subtle { color: var(--ink-subtle); }
-=======
   .card-glow-strong {
     background-color: var(--surface-800);
     border: 1px solid rgba(189, 255, 46, 0.18);
@@ -173,7 +168,6 @@
     transition: width 0.25s ease;
   }
   .nav-underline:hover::after { width: 100%; }
->>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
 }
 
 /* --------------------------------------------------------------------------
