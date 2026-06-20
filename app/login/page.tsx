@@ -1,4 +1,6 @@
-'use client';
+﻿'use client';
+
+export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -88,7 +90,7 @@ function LoginContent() {
         <div className="absolute inset-0 dot-grid opacity-40" />
       </div>
 
-      {/* Left panel — decorative, desktop only */}
+      {/* Left panel â€” decorative, desktop only */}
       <div className="hidden lg:flex w-[480px] shrink-0 flex-col justify-between p-12 relative">
         <div>
           <div className="flex items-center gap-3 mb-16">
@@ -124,7 +126,7 @@ function LoginContent() {
             { value: '10K+', label: 'Workouts tracked' },
             { value: '500+', label: 'Active coaches' },
             { value: '98%', label: 'Athlete satisfaction' },
-            { value: '∞', label: 'PRs broken' },
+            { value: 'âˆž', label: 'PRs broken' },
           ].map((s) => (
             <div
               key={s.label}
@@ -138,7 +140,7 @@ function LoginContent() {
         </div>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel â€” form */}
       <div className="flex-1 flex items-center justify-center p-6 relative">
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
@@ -202,7 +204,7 @@ function LoginContent() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   className={cn(
                     'w-full px-4 py-3 rounded-xl text-sm transition-all',
                     'text-ink placeholder:text-ink-subtle',
@@ -231,7 +233,7 @@ function LoginContent() {
                 {submitting ? (
                   <>
                     <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                    Signing in…
+                    Signing inâ€¦
                   </>
                 ) : (
                   <>
@@ -272,3 +274,4 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+

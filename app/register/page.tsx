@@ -1,4 +1,6 @@
-'use client';
+﻿'use client';
+
+export const dynamic = 'force-dynamic';
 
 import { useState, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -76,8 +78,8 @@ function RegisterContent() {
     };
 
     const personaOptions: { value: 'athlete' | 'coach'; emoji: string; title: string; desc: string }[] = [
-        { value: 'athlete', emoji: '💪', title: 'Athlete', desc: 'Log workouts & track PRs' },
-        { value: 'coach', emoji: '📋', title: 'Coach', desc: 'Manage athletes & programs' },
+        { value: 'athlete', emoji: 'ðŸ’ª', title: 'Athlete', desc: 'Log workouts & track PRs' },
+        { value: 'coach', emoji: 'ðŸ“‹', title: 'Coach', desc: 'Manage athletes & programs' },
     ];
 
     const inputCls = cn(
@@ -183,7 +185,7 @@ function RegisterContent() {
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-2">Confirm</label>
-                                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={inputCls} style={inputStyle} autoComplete="new-password" required />
+                                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" className={inputCls} style={inputStyle} autoComplete="new-password" required />
                             </div>
                         </div>
 
@@ -201,7 +203,7 @@ function RegisterContent() {
                             {loading ? (
                                 <>
                                     <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
-                                    Creating account…
+                                    Creating accountâ€¦
                                 </>
                             ) : (
                                 <>
@@ -235,3 +237,4 @@ export default function RegisterPage() {
         </Suspense>
     );
 }
+
