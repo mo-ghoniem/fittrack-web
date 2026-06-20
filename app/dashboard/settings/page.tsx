@@ -187,20 +187,11 @@ export default function SettingsPage() {
   }
 
   const profileMutation = useMutation({
-    mutationFn: (dto: { name?: string; bio?: string }) => updateProfile(dto),
+    mutationFn: (dto: { name?: string; bio?: string; weight_kg?: number | null; height_cm?: number | null }) => updateProfile(dto),
     onSuccess: () => {
       setProfileSaved(true);
       qc.invalidateQueries({ queryKey: ['me'] });
       setTimeout(() => setProfileSaved(false), 2500);
-    },
-  });
-
-  const statsMutation = useMutation({
-    mutationFn: (dto: { weight_kg?: number; height_cm?: number }) => updateProfile(dto),
-    onSuccess: () => {
-      setStatsSaved(true);
-      qc.invalidateQueries({ queryKey: ['me'] });
-      setTimeout(() => setStatsSaved(false), 2500);
     },
   });
 
@@ -210,11 +201,6 @@ export default function SettingsPage() {
   });
 
   const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    profileMutation.mutate({ name: name.trim(), bio: bio.trim() });
-  };
-
-  const handleStatsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStatsError('');
     const w = weightKg.trim() ? parseFloat(weightKg) : null;
@@ -227,10 +213,12 @@ export default function SettingsPage() {
       setStatsError('Height must be between 100 and 250 cm.');
       return;
     }
-    const dto: Record<string, number | null> = {};
-    if (w !== null) dto.weight_kg = w;
-    if (h !== null) dto.height_cm = h;
-    statsMutation.mutate(dto as any);
+    profileMutation.mutate({
+      name: name.trim(),
+      bio: bio.trim(),
+      weight_kg: w,
+      height_cm: h,
+    });
   };
 
   const w = parseFloat(weightKg);
@@ -256,7 +244,7 @@ export default function SettingsPage() {
               ))}
             </div>
           ) : (
-            <form onSubmit={handleProfileSubmit} className="p-6 space-y-4">
+            <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Display Name</label>
                 <input
@@ -277,20 +265,7 @@ export default function SettingsPage() {
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                 />
               </div>
-              {profileMutation.isError && (
-                <p className="text-sm text-red-600">Failed to save changes.</p>
-              )}
-              <button
-                type="submit"
-                disabled={profileMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
-              >
-                {profileMutation.isPending
-                  ? <Loader2 size={14} className="animate-spin" />
-                  : <Save size={14} />}
-                {profileMutation.isPending ? 'Saving…' : profileSaved ? '✓ Saved!' : 'Save Profile'}
-              </button>
-            </form>
+            </div>
           )}
         </div>
 
@@ -306,7 +281,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <form onSubmit={handleStatsSubmit} className="p-6 space-y-4">
+          <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -367,18 +342,21 @@ export default function SettingsPage() {
             )}
 
             {statsError && <p className="text-sm text-red-600">{statsError}</p>}
+            {profileMutation.isError && (
+              <p className="text-sm text-red-600">Failed to save profile changes.</p>
+            )}
 
             <button
-              type="submit"
-              disabled={statsMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              onClick={handleProfileSubmit}
+              disabled={profileMutation.isPending}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors w-max"
             >
-              {statsMutation.isPending
+              {profileMutation.isPending
                 ? <Loader2 size={14} className="animate-spin" />
                 : <Save size={14} />}
-              {statsMutation.isPending ? 'Saving…' : statsSaved ? '✓ Saved!' : 'Save Stats'}
+              {profileMutation.isPending ? 'Saving…' : profileSaved ? '✓ Saved!' : 'Save All Changes'}
             </button>
-          </form>
+          </div>
         </div>
 
         {/* ── Personal Records ── */}

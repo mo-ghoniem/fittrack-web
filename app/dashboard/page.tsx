@@ -8,7 +8,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { workoutsApi, assignedWorkoutsApi } from '@/lib/api';
+import { workoutsApi, assignedWorkoutsApi, statsApi } from '@/lib/api';
 import { formatRelative } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -118,6 +118,11 @@ export default function DashboardPage() {
     queryFn: () => workoutsApi.feed({ limit: 8 }),
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ['stats', '30d'],
+    queryFn: () => statsApi.get('30d'),
+  });
+
   const recentWorkouts = feed?.data ?? [];
 
   const coachActions = [
@@ -149,13 +154,13 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           <StatCard
             label="Workouts This Month"
-            value={feed?.total ?? '—'}
+            value={stats ? String(stats.workoutCount ?? 0) : '—'}
             icon={Activity}
             color="lime"
           />
           <StatCard
             label="Active Streak"
-            value="—"
+            value={stats ? `${stats.streak ?? 0} days` : '—'}
             icon={TrendingUp}
             color="orange"
           />
@@ -169,7 +174,7 @@ export default function DashboardPage() {
           ) : (
             <StatCard
               label="Total PRs"
-              value="—"
+              value={stats ? String(stats.personalRecords?.length ?? 0) : '—'}
               icon={Trophy}
               color="violet"
             />
