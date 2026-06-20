@@ -16,6 +16,10 @@ import {
   Menu,
   X,
   ClipboardCheck,
+<<<<<<< HEAD
+=======
+  Zap,
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -49,10 +53,14 @@ export function Sidebar() {
   const { role, loading } = useUserRole();
 
   const isCoach = role === 'coach';
+  const isAdmin = role === 'admin';
 
+<<<<<<< HEAD
   const isAdmin = role === 'admin';
 
   // Filter nav items based on role
+=======
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
   const visibleItems = NAV_ITEMS.filter(
     (item) =>
       (!item.adminOnly || isAdmin) &&
@@ -69,6 +77,7 @@ export function Sidebar() {
     <>
       <button
         onClick={() => setIsOpen(true)}
+<<<<<<< HEAD
         className="md:hidden fixed top-3 left-4 z-40 p-2 rounded-lg bg-surface-700 shadow-sm border border-surface-border text-ink-muted hover:bg-surface-600"
       >
         <Menu size={20} />
@@ -152,10 +161,46 @@ export function Sidebar() {
                   ? 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30'
                   : 'bg-accent-400/15 text-accent-300 ring-1 ring-accent-400/30',
               )}
+=======
+        className="md:hidden fixed top-3 left-4 z-40 p-2 rounded-xl bg-surface-800 shadow-sm border border-surface-border text-ink-muted hover:text-ink hover:bg-surface-700 transition-colors"
+      >
+        <Menu size={20} />
+      </button>
+
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 md:hidden backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <aside className={cn(
+        'fixed inset-y-0 left-0 z-50 w-60 flex flex-col transition-transform duration-300 md:relative md:translate-x-0 shrink-0 h-[100dvh]',
+        isOpen ? 'translate-x-0' : '-translate-x-full',
+      )}
+        style={{
+          background: 'linear-gradient(180deg, #0a0b0e 0%, #0d0e12 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.05)',
+        }}
+      >
+        {/* Logo */}
+        <div className="flex items-center justify-between px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-base bg-lime-gradient shrink-0"
+              style={{ boxShadow: '0 0 20px -4px rgba(189,255,46,0.6)' }}
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
             >
-              {isCoach ? 'Coach' : 'Athlete'}
-            </span>
+              <Zap size={18} style={{ color: '#0a0b0e' }} strokeWidth={2.5} />
+            </div>
+            <div>
+              <p className="text-ink font-extrabold text-sm leading-tight tracking-tight">FitTrack</p>
+              <p className="text-ink-subtle text-[10px] font-medium tracking-wide uppercase">
+                {loading ? '—' : isAdmin ? 'Admin' : isCoach ? 'Coach' : 'Athlete'}
+              </p>
+            </div>
           </div>
+<<<<<<< HEAD
         )}
         <button
           onClick={handleSignOut}
@@ -166,6 +211,83 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+=======
+          <button
+            className="md:hidden text-ink-subtle hover:text-ink transition-colors p-1 rounded-lg hover:bg-surface-700"
+            onClick={() => setIsOpen(false)}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto scrollbar-hide">
+          {visibleItems.map(({ href, label, icon: Icon }) => {
+            const active =
+              href === '/dashboard'
+                ? pathname === '/dashboard'
+                : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                  active
+                    ? 'text-surface-900'
+                    : 'text-ink-muted hover:text-ink hover:bg-surface-800',
+                )}
+                style={active ? {
+                  background: 'linear-gradient(135deg, #d8ff5c 0%, #bdff2e 100%)',
+                  boxShadow: '0 0 20px -4px rgba(189,255,46,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
+                } : undefined}
+              >
+                <span className={cn(
+                  'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all',
+                  active
+                    ? 'bg-black/15'
+                    : 'bg-surface-700 group-hover:bg-surface-600',
+                )}>
+                  <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+                </span>
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom */}
+        <div className="px-3 pb-5 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+          {!loading && (
+            <div className="px-3 py-2 mb-1">
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
+                  isAdmin
+                    ? 'bg-red-500/15 text-red-300 ring-1 ring-red-500/30'
+                    : isCoach
+                    ? 'bg-primary-400/15 text-primary-300 ring-1 ring-primary-400/30'
+                    : 'bg-accent-400/15 text-accent-300 ring-1 ring-accent-400/30',
+                )}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                {isAdmin ? 'Admin' : isCoach ? 'Coach' : 'Athlete'}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-sm font-medium text-ink-subtle hover:text-red-300 hover:bg-red-500/10 transition-all duration-150"
+          >
+            <span className="w-7 h-7 rounded-lg bg-surface-700 flex items-center justify-center shrink-0">
+              <LogOut size={15} strokeWidth={1.8} />
+            </span>
+            Sign out
+          </button>
+        </div>
+      </aside>
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
     </>
   );
 }

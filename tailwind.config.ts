@@ -66,13 +66,47 @@ const config: Config = {
       boxShadow: {
         'glow-lime': '0 0 0 1px rgba(189, 255, 46, 0.25), 0 0 24px -4px rgba(189, 255, 46, 0.35)',
         'glow-lime-sm': '0 0 0 1px rgba(189, 255, 46, 0.18), 0 0 12px -2px rgba(189, 255, 46, 0.25)',
+<<<<<<< HEAD
         'card-dark': '0 1px 0 rgba(255,255,255,0.02) inset, 0 10px 30px -18px rgba(0,0,0,0.8)',
+=======
+        'glow-lime-lg': '0 0 0 1px rgba(189, 255, 46, 0.35), 0 0 48px -6px rgba(189, 255, 46, 0.5)',
+        'glow-cyan': '0 0 0 1px rgba(34, 211, 238, 0.25), 0 0 24px -4px rgba(34, 211, 238, 0.3)',
+        'glow-cyan-sm': '0 0 0 1px rgba(34, 211, 238, 0.18), 0 0 12px -2px rgba(34, 211, 238, 0.2)',
+        'card-dark': '0 1px 0 rgba(255,255,255,0.02) inset, 0 10px 30px -18px rgba(0,0,0,0.8)',
+        'card-elevated': '0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px -20px rgba(0,0,0,0.9)',
+        'inner-glow': 'inset 0 1px 0 rgba(255,255,255,0.04)',
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
       },
       backgroundImage: {
         'lime-gradient':
           'linear-gradient(135deg, #d8ff5c 0%, #bdff2e 45%, #a3e60b 100%)',
+<<<<<<< HEAD
         'dark-radial':
           'radial-gradient(circle at 20% 0%, rgba(189,255,46,0.08) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(34,211,238,0.06) 0%, transparent 45%)',
+=======
+        'lime-gradient-subtle':
+          'linear-gradient(135deg, rgba(189,255,46,0.15) 0%, rgba(189,255,46,0.05) 100%)',
+        'cyan-gradient':
+          'linear-gradient(135deg, #67e8f9 0%, #22d3ee 45%, #06b6d4 100%)',
+        'dark-radial':
+          'radial-gradient(circle at 20% 0%, rgba(189,255,46,0.08) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(34,211,238,0.06) 0%, transparent 45%)',
+        'hero-gradient':
+          'linear-gradient(135deg, rgba(189,255,46,0.12) 0%, rgba(34,211,238,0.06) 50%, transparent 100%)',
+        'card-gradient':
+          'linear-gradient(145deg, rgba(255,255,255,0.02) 0%, transparent 100%)',
+      },
+      keyframes: {
+        'fade-in': { from: { opacity: '0', transform: 'translateY(8px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        'slide-in': { from: { opacity: '0', transform: 'translateX(-12px)' }, to: { opacity: '1', transform: 'translateX(0)' } },
+        'pulse-glow': { '0%, 100%': { boxShadow: '0 0 12px -2px rgba(189,255,46,0.3)' }, '50%': { boxShadow: '0 0 28px -2px rgba(189,255,46,0.6)' } },
+        shimmer: { from: { backgroundPosition: '200% 0' }, to: { backgroundPosition: '-200% 0' } },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.3s ease-out',
+        'slide-in': 'slide-in 0.25s ease-out',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        shimmer: 'shimmer 2.5s linear infinite',
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
       },
     },
   },

@@ -1,5 +1,6 @@
-'use client';
+export const dynamic = 'force-dynamic';
 
+<<<<<<< HEAD
 import { useState, useEffect, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -172,6 +173,25 @@ function LoginContent() {
         </div>
       </div>
     </div>
+=======
+import { Suspense } from 'react';
+import { LoginContent } from './LoginContent';
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-surface-base flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-full animate-spin"
+            style={{ border: '2px solid rgba(189,255,46,0.2)', borderTopColor: '#bdff2e' }}
+          />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+>>>>>>> d952a10dfe09291a556c79a7edfcded67d527a73
   );
 }
 
