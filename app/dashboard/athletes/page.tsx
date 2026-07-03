@@ -113,7 +113,8 @@ function InviteLinkModal({ onClose }: { onClose: () => void }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['active-invitation'] }),
   });
 
-  const link = currentInv?.link ?? generateMutation.data?.link ?? null;
+  const token = currentInv?.token ?? generateMutation.data?.token ?? null;
+  const link = token ? `${window.location.origin}/join/${token}` : null;
 
   const copyLink = () => {
     if (!link) return;

@@ -440,9 +440,12 @@ function WorkoutDialog({
   const [error, setError]       = useState('');
 
   const saveMutation = useMutation({
-    mutationFn: () => isEdit
-      ? templatesApi.updateWorkout(templateId, existingWorkout.id, { title, description: desc || undefined, blocks })
-      : templatesApi.addWorkout(templateId, { dayIndex, title, description: desc || undefined, blocks }),
+    mutationFn: () => {
+      const resolvedTitle = title.trim() || `Day ${dayIndex}`;
+      return isEdit
+        ? templatesApi.updateWorkout(templateId, existingWorkout.id, { title: resolvedTitle, description: desc || undefined, blocks })
+        : templatesApi.addWorkout(templateId, { dayIndex, title: resolvedTitle, description: desc || undefined, blocks });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['template', templateId] });
       onClose();
@@ -469,22 +472,25 @@ function WorkoutDialog({
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg"><X size={16}/></button>
         </div>
 
-        <form onSubmit={e=>{e.preventDefault();if(!title.trim()){setError('Title required');return;}setError('');saveMutation.mutate();}}
+        <form onSubmit={e=>{e.preventDefault();setError('');saveMutation.mutate();}}
           className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Workout title *</label>
-            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="e.g. Push Day, Fran, AMRAP 20"
-              autoFocus
-              className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"/>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
-            <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Optional description…" rows={2}
-              className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"/>
-          </div>
+          {isEdit && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Workout title</label>
+                <input value={title} onChange={e=>setTitle(e.target.value)} placeholder={`Day ${dayIndex}`}
+                  autoFocus
+                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"/>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
+                <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Optional description…" rows={2}
+                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"/>
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Workout Blocks</label>
