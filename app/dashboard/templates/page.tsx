@@ -201,8 +201,8 @@ function BlockEditor({ blocks, onChange }: { blocks: Block[]; onChange:(b:Block[
               value={block.description}
               onChange={e => update(i, { description: e.target.value })}
               placeholder="Description / instructions… Use @75% for percentage-based weights"
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              rows={4}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
             />
             <input
               value={block.videoUrl}
