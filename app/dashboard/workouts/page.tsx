@@ -375,7 +375,7 @@ function WorkoutCard({ w, onSaved }: { w: any; onSaved: () => void }) {
   }[]>(() => blocks.map(() => ({ expanded: false, checked: false, showLog: false, result: '', scalingChoice: '' })));
 
   const [activeTimer, setActiveTimer] = useState<{ timer: any; blockName: string; description?: string } | null>(null);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(w.athlete_notes ?? '');
   const [singleResult, setSingleResult] = useState('');
   const [showSingleLog, setShowSingleLog] = useState(false);
   const [prCelebration, setPrCelebration] = useState(false);
@@ -634,57 +634,59 @@ function WorkoutCard({ w, onSaved }: { w: any; onSaved: () => void }) {
                   </div>
 
                   {/* Actions */}
-                  {!localIsDone && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      {block.timer && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    {!localIsDone && (
+                      <>
+                        {block.timer && (
+                          <button
+                            onClick={() => setActiveTimer({ timer: block.timer, blockName: block.name, description: block.description })}
+                            title="Start timer"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
+                          >
+                            <Play size={11} />
+                            Timer
+                          </button>
+                        )}
                         <button
-                          onClick={() => setActiveTimer({ timer: block.timer, blockName: block.name, description: block.description })}
-                          title="Start timer"
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors"
+                          onClick={() => update(i, { showLog: !bs.showLog })}
+                          title="Log result"
+                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                            bs.showLog
+                              ? 'bg-primary-100 text-primary-700'
+                              : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'
+                          }`}
                         >
-                          <Play size={11} />
-                          Timer
+                          <ClipboardEdit size={13} />
+                          Log
                         </button>
-                      )}
-                      <button
-                        onClick={() => update(i, { showLog: !bs.showLog })}
-                        title="Log result"
-                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                          bs.showLog
-                            ? 'bg-primary-100 text-primary-700'
-                            : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'
-                        }`}
-                      >
-                        <ClipboardEdit size={13} />
-                        Log
-                      </button>
-                      <button
-                        onClick={() => {
-                          const newStates = blockStates.map((s, j) =>
-                            j === i ? { ...s, checked: !s.checked } : s
-                          );
-                          setBlockStates(newStates);
-                          autoSave(newStates, notes, singleResult);
-                        }}
-                        title={bs.checked ? 'Unmark as done' : 'Mark as done'}
-                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
-                          bs.checked
-                            ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600'
-                            : 'border-2 border-slate-200 text-slate-300 hover:border-emerald-400 hover:text-emerald-400'
-                        }`}
-                      >
-                        <CheckCircle2 size={17} strokeWidth={bs.checked ? 2.5 : 1.8} />
-                      </button>
-                      {hasDetails && (
                         <button
-                          onClick={() => update(i, { expanded: !bs.expanded })}
-                          className="p-1 text-slate-300 hover:text-slate-500 transition-colors"
+                          onClick={() => {
+                            const newStates = blockStates.map((s, j) =>
+                              j === i ? { ...s, checked: !s.checked } : s
+                            );
+                            setBlockStates(newStates);
+                            autoSave(newStates, notes, singleResult);
+                          }}
+                          title={bs.checked ? 'Unmark as done' : 'Mark as done'}
+                          className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+                            bs.checked
+                              ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-600'
+                              : 'border-2 border-slate-200 text-slate-300 hover:border-emerald-400 hover:text-emerald-400'
+                          }`}
                         >
-                          {bs.expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                          <CheckCircle2 size={17} strokeWidth={bs.checked ? 2.5 : 1.8} />
                         </button>
-                      )}
-                    </div>
-                  )}
+                      </>
+                    )}
+                    {hasDetails && (
+                      <button
+                        onClick={() => update(i, { expanded: !bs.expanded })}
+                        className="p-1 text-slate-300 hover:text-slate-500 transition-colors"
+                      >
+                        {bs.expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                      </button>
+                    )}
+                  </div>
 
                   {/* Completed view — show logged result + scaling choice */}
                   {localIsDone && w.block_results && (() => {
@@ -817,19 +819,18 @@ function WorkoutCard({ w, onSaved }: { w: any; onSaved: () => void }) {
         </div>
       )}
 
-      {/* ── Notes footer — auto-saves on blur, no submit button needed ── */}
-      {!localIsDone && (
-        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50">
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            onBlur={() => autoSave(blockStates, notes, singleResult)}
-            placeholder="Notes (optional) — how did it feel? Any mods?"
-            rows={1}
-            className="w-full px-3 py-2 text-sm border border-slate-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-          />
-        </div>
-      )}
+      {/* ── Notes footer — always visible, editable in both pending and completed state ── */}
+      <div className={`border-t px-4 py-3 ${localIsDone ? 'border-emerald-100 bg-emerald-50/40' : 'border-slate-100 bg-slate-50'}`}>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Notes</p>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          onBlur={() => autoSave(blockStates, notes, singleResult)}
+          placeholder="How did it feel? Any modifications?"
+          rows={2}
+          className="w-full px-3 py-2 text-sm border border-slate-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+        />
+      </div>
 
       {/* ── Completed result summary ── */}
       {localIsDone && w.athlete_result && (
@@ -843,9 +844,6 @@ function WorkoutCard({ w, onSaved }: { w: any; onSaved: () => void }) {
               </span>
             )}
           </div>
-          {w.athlete_notes && (
-            <p className="text-xs text-slate-500 mt-1 italic">{w.athlete_notes}</p>
-          )}
         </div>
       )}
 

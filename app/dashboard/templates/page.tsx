@@ -597,6 +597,228 @@ function AssignModal({ template, onClose }: { template:any; onClose:()=>void }) 
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   PROGRAM VIEW  (week-grid, inline block management)
+═══════════════════════════════════════════════════════════════ */
+function ProgramView({
+  templateId, workouts,
+}: {
+  templateId: string;
+  workouts: any[];
+}) {
+  const qc = useQueryClient();
+  const [weekStart, setWeekStart] = useState(1);
+  const [addingToDay, setAddingToDay] = useState<number | null>(null);
+  const [newBlockName, setNewBlockName] = useState('');
+  const [newBlockDesc, setNewBlockDesc] = useState('');
+  const [saving, setSaving] = useState<number | null>(null);
+
+  const workoutByDay = useMemo(() => {
+    const map: Record<number, any> = {};
+    for (const w of workouts) {
+      if (!map[w.day_index]) map[w.day_index] = w;
+    }
+    return map;
+  }, [workouts]);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['template', templateId] });
+
+  async function saveBlocks(dayIndex: number, newBlocks: Block[]) {
+    setSaving(dayIndex);
+    try {
+      const w = workoutByDay[dayIndex];
+      if (w) {
+        await templatesApi.updateWorkout(templateId, w.id, { blocks: newBlocks });
+      } else if (newBlocks.length > 0) {
+        await templatesApi.addWorkout(templateId, { dayIndex, title: `Day ${dayIndex}`, blocks: newBlocks });
+      }
+      await invalidate();
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function handleAddBlock(dayIndex: number) {
+    const block: Block = { name: newBlockName.trim() || 'Block', description: newBlockDesc, videoUrl: '' };
+    const existing = workoutByDay[dayIndex]?.blocks ?? [];
+    await saveBlocks(dayIndex, [...existing, block]);
+    setAddingToDay(null);
+    setNewBlockName('');
+    setNewBlockDesc('');
+  }
+
+  async function handleDelete(dayIndex: number, bi: number) {
+    const blocks = (workoutByDay[dayIndex]?.blocks ?? []).filter((_: any, i: number) => i !== bi);
+    await saveBlocks(dayIndex, blocks);
+  }
+
+  async function handleDuplicate(dayIndex: number, bi: number) {
+    const existing = workoutByDay[dayIndex]?.blocks ?? [];
+    const copy = { ...existing[bi] };
+    const newBlocks = [...existing.slice(0, bi + 1), copy, ...existing.slice(bi + 1)];
+    await saveBlocks(dayIndex, newBlocks);
+  }
+
+  async function handleMoveInDay(dayIndex: number, bi: number, dir: 'up' | 'down') {
+    const blocks = [...(workoutByDay[dayIndex]?.blocks ?? [])];
+    const target = dir === 'up' ? bi - 1 : bi + 1;
+    if (target < 0 || target >= blocks.length) return;
+    [blocks[bi], blocks[target]] = [blocks[target], blocks[bi]];
+    await saveBlocks(dayIndex, blocks);
+  }
+
+  async function handleMoveDay(fromDay: number, bi: number, toDay: number) {
+    if (toDay < 1) return;
+    const fromBlocks = [...(workoutByDay[fromDay]?.blocks ?? [])];
+    const block = fromBlocks[bi];
+    const newFrom = fromBlocks.filter((_: any, i: number) => i !== bi);
+    const newTo = [...(workoutByDay[toDay]?.blocks ?? []), block];
+    setSaving(fromDay);
+    try {
+      const wFrom = workoutByDay[fromDay];
+      if (wFrom) await templatesApi.updateWorkout(templateId, wFrom.id, { blocks: newFrom });
+      const wTo = workoutByDay[toDay];
+      if (wTo) {
+        await templatesApi.updateWorkout(templateId, wTo.id, { blocks: newTo });
+      } else {
+        await templatesApi.addWorkout(templateId, { dayIndex: toDay, title: `Day ${toDay}`, blocks: newTo });
+      }
+      await invalidate();
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const days = Array.from({ length: 7 }, (_, i) => weekStart + i);
+  const weekNum = Math.ceil(weekStart / 7);
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Week navigation */}
+      <div className="flex items-center gap-3 px-6 py-2.5 bg-slate-50 border-b border-slate-100">
+        <button onClick={() => setWeekStart(s => Math.max(1, s - 7))} disabled={weekStart <= 1}
+          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 transition-colors">
+          <ChevronLeft size={15}/>
+        </button>
+        <span className="text-sm font-semibold text-slate-700">
+          Week {weekNum} · Days {weekStart}–{weekStart + 6}
+        </span>
+        <button onClick={() => setWeekStart(s => s + 7)}
+          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-colors">
+          <ChevronRight size={15}/>
+        </button>
+        <span className="ml-auto text-xs text-slate-400">Click a block to edit · hover for actions</span>
+      </div>
+
+      {/* Day columns */}
+      <div className="flex-1 overflow-auto">
+        <div className="grid grid-cols-7 min-w-[840px] h-full divide-x divide-slate-100">
+          {days.map(dayIndex => {
+            const workout = workoutByDay[dayIndex];
+            const blocks: Block[] = workout?.blocks ?? [];
+            const isAddingHere = addingToDay === dayIndex;
+            const isSavingHere = saving === dayIndex;
+
+            return (
+              <div key={dayIndex} className="flex flex-col min-h-[400px]">
+                {/* Day header */}
+                <div className="px-2 py-2 bg-white border-b border-slate-100 text-center sticky top-0 z-10">
+                  <p className={`text-xs font-bold uppercase tracking-wide ${blocks.length > 0 ? 'text-primary-600' : 'text-slate-400'}`}>
+                    Day {dayIndex}
+                  </p>
+                  {blocks.length > 0 && (
+                    <p className="text-[10px] text-slate-400 mt-0.5">{blocks.length} block{blocks.length !== 1 ? 's' : ''}</p>
+                  )}
+                  {isSavingHere && <span className="text-[10px] text-amber-500 animate-pulse">Saving…</span>}
+                </div>
+
+                {/* Blocks */}
+                <div className="flex-1 p-2 space-y-2 bg-slate-50/30">
+                  {blocks.map((block, bi) => (
+                    <div key={bi} className="bg-white border border-slate-200 rounded-lg p-2 group shadow-sm hover:border-primary-200 hover:shadow transition-all">
+                      <p className="text-xs font-semibold text-slate-800 leading-tight truncate">
+                        {block.name || <span className="italic text-slate-400">Unnamed</span>}
+                      </p>
+                      {block.description && (
+                        <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2 leading-tight">{block.description}</p>
+                      )}
+                      {/* Action bar — visible on hover */}
+                      <div className="flex items-center gap-0.5 mt-1.5 pt-1.5 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button title="Move up" onClick={() => handleMoveInDay(dayIndex, bi, 'up')} disabled={bi === 0}
+                          className="p-0.5 rounded text-slate-300 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-20 transition-colors">
+                          <ChevronUp size={12}/>
+                        </button>
+                        <button title="Move down" onClick={() => handleMoveInDay(dayIndex, bi, 'down')} disabled={bi === blocks.length - 1}
+                          className="p-0.5 rounded text-slate-300 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-20 transition-colors">
+                          <ChevronDown size={12}/>
+                        </button>
+                        <button title={`Move to Day ${dayIndex - 1}`} onClick={() => handleMoveDay(dayIndex, bi, dayIndex - 1)} disabled={dayIndex <= 1}
+                          className="p-0.5 rounded text-slate-300 hover:text-blue-500 hover:bg-blue-50 disabled:opacity-20 transition-colors">
+                          <ChevronLeft size={12}/>
+                        </button>
+                        <button title={`Move to Day ${dayIndex + 1}`} onClick={() => handleMoveDay(dayIndex, bi, dayIndex + 1)}
+                          className="p-0.5 rounded text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                          <ChevronRight size={12}/>
+                        </button>
+                        <button title="Duplicate" onClick={() => handleDuplicate(dayIndex, bi)}
+                          className="p-0.5 rounded text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                          <Copy size={12}/>
+                        </button>
+                        <button title="Delete" onClick={() => { if (confirm('Delete this block?')) handleDelete(dayIndex, bi); }}
+                          className="p-0.5 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                          <X size={12}/>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add block form */}
+                  {isAddingHere ? (
+                    <div className="border border-primary-200 bg-primary-50 rounded-lg p-2 space-y-1.5">
+                      <input
+                        autoFocus
+                        value={newBlockName}
+                        onChange={e => setNewBlockName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleAddBlock(dayIndex); if (e.key === 'Escape') { setAddingToDay(null); setNewBlockName(''); setNewBlockDesc(''); } }}
+                        placeholder="Block name…"
+                        className="w-full px-2 py-1.5 text-xs border border-primary-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                      />
+                      <textarea
+                        value={newBlockDesc}
+                        onChange={e => setNewBlockDesc(e.target.value)}
+                        placeholder="Description (optional)…"
+                        rows={2}
+                        className="w-full px-2 py-1.5 text-xs border border-primary-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white resize-none"
+                      />
+                      <div className="flex gap-1">
+                        <button onClick={() => { setAddingToDay(null); setNewBlockName(''); setNewBlockDesc(''); }}
+                          className="flex-1 py-1 text-[11px] font-medium text-slate-500 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
+                          Cancel
+                        </button>
+                        <button onClick={() => handleAddBlock(dayIndex)}
+                          className="flex-1 py-1 text-[11px] font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setAddingToDay(dayIndex); setNewBlockName(''); setNewBlockDesc(''); }}
+                      className="w-full flex items-center justify-center gap-1 py-2 text-[11px] font-medium text-primary-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-dashed border-primary-200 hover:border-primary-300 transition-colors"
+                    >
+                      <Plus size={11}/> Add Block
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    CALENDAR — MONTH VIEW
 ═══════════════════════════════════════════════════════════════ */
 function MonthView({
@@ -823,7 +1045,7 @@ function DayView({
 /* ═══════════════════════════════════════════════════════════════
    TEMPLATE EDITOR  (calendar view for a single template)
 ═══════════════════════════════════════════════════════════════ */
-type CalView = 'month' | 'week' | 'day';
+type CalView = 'month' | 'week' | 'day' | 'program';
 
 function TemplateEditor({ template, onBack }: { template:any; onBack:()=>void }) {
   const qc = useQueryClient();
@@ -835,7 +1057,7 @@ function TemplateEditor({ template, onBack }: { template:any; onBack:()=>void })
   });
 
   // Calendar navigation
-  const [view, setView]               = useState<CalView>('month');
+  const [view, setView]               = useState<CalView>('program');
   const [currentDate, setCurrentDate] = useState(() => { const d=new Date(); d.setHours(0,0,0,0); return d; });
 
   // Dialog state
@@ -956,10 +1178,15 @@ function TemplateEditor({ template, onBack }: { template:any; onBack:()=>void })
 
         {/* View switcher */}
         <div className="flex bg-slate-100 rounded-lg p-1 gap-0.5">
-          {(['day','week','month'] as CalView[]).map(v => (
-            <button key={v} onClick={()=>setView(v)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-colors ${view===v ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              {v}
+          {([
+            { key: 'program', label: 'Program' },
+            { key: 'month',   label: 'Month'   },
+            { key: 'week',    label: 'Week'     },
+            { key: 'day',     label: 'Day'      },
+          ] as { key: CalView; label: string }[]).map(({ key, label }) => (
+            <button key={key} onClick={() => setView(key)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${view === key ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              {label}
             </button>
           ))}
         </div>
@@ -971,6 +1198,8 @@ function TemplateEditor({ template, onBack }: { template:any; onBack:()=>void })
           <div className="flex-1 flex items-center justify-center">
             <Loader2 size={28} className="animate-spin text-primary-500"/>
           </div>
+        ) : view === 'program' ? (
+          <ProgramView templateId={template.id} workouts={workouts}/>
         ) : view === 'month' ? (
           <MonthView
             currentDate={currentDate} programStart={programStart}
