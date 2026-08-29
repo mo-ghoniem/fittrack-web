@@ -476,24 +476,7 @@ function WorkoutDialog({
           className="p-6 space-y-4">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
 
-          {isEdit && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Workout title</label>
-                <input value={title} onChange={e=>setTitle(e.target.value)} placeholder={`Day ${dayIndex}`}
-                  autoFocus
-                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"/>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Notes</label>
-                <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Optional description…" rows={3}
-                  className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"/>
-              </div>
-            </>
-          )}
-
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Workout Blocks</label>
             <BlockEditor blocks={blocks} onChange={setBlocks}/>
           </div>
 
