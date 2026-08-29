@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus, Trash2, Loader2, ClipboardList, ChevronLeft, ChevronRight,
+  Plus, Trash2, Loader2, ClipboardList, ChevronLeft, ChevronRight, ChevronUp, ChevronDown,
   Users, X, Check, PlusCircle, Send, ArrowLeft, Calendar,
   Edit2, MoreHorizontal, BarChart2, Copy,
 } from 'lucide-react';
