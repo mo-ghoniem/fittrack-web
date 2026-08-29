@@ -688,125 +688,172 @@ function ProgramView({
     }
   }
 
+  const [checkedDays, setCheckedDays] = useState<Set<number>>(new Set());
+  const [selectedBlock, setSelectedBlock] = useState<{ day: number; bi: number } | null>(null);
+
+  const toggleDayCheck = (d: number) =>
+    setCheckedDays(prev => { const s = new Set(prev); s.has(d) ? s.delete(d) : s.add(d); return s; });
+
   const days = Array.from({ length: 7 }, (_, i) => weekStart + i);
   const weekNum = Math.ceil(weekStart / 7);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden bg-white">
       {/* Week navigation */}
-      <div className="flex items-center gap-3 px-6 py-2.5 bg-slate-50 border-b border-slate-100">
+      <div className="flex items-center gap-3 px-5 py-2 border-b border-slate-100">
         <button onClick={() => setWeekStart(s => Math.max(1, s - 7))} disabled={weekStart <= 1}
-          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 transition-colors">
-          <ChevronLeft size={15}/>
+          className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 transition-colors">
+          <ChevronLeft size={16}/>
         </button>
-        <span className="text-sm font-semibold text-slate-700">
-          Week {weekNum} · Days {weekStart}–{weekStart + 6}
-        </span>
+        <span className="text-sm font-semibold text-slate-700">Week {weekNum}</span>
         <button onClick={() => setWeekStart(s => s + 7)}
-          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-colors">
-          <ChevronRight size={15}/>
+          className="p-1 rounded text-slate-400 hover:text-slate-700 transition-colors">
+          <ChevronRight size={16}/>
         </button>
-        <span className="ml-auto text-xs text-slate-400">Click a block to edit · hover for actions</span>
       </div>
 
       {/* Day columns */}
       <div className="flex-1 overflow-auto">
-        <div className="grid grid-cols-7 min-w-[840px] h-full divide-x divide-slate-100">
+        <div className="grid grid-cols-7 min-w-[700px] h-full divide-x divide-slate-100">
           {days.map(dayIndex => {
             const workout = workoutByDay[dayIndex];
             const blocks: Block[] = workout?.blocks ?? [];
             const isAddingHere = addingToDay === dayIndex;
             const isSavingHere = saving === dayIndex;
+            const isChecked = checkedDays.has(dayIndex);
 
             return (
-              <div key={dayIndex} className="flex flex-col min-h-[400px]">
-                {/* Day header */}
-                <div className="px-2 py-2 bg-white border-b border-slate-100 text-center sticky top-0 z-10">
-                  <p className={`text-xs font-bold uppercase tracking-wide ${blocks.length > 0 ? 'text-primary-600' : 'text-slate-400'}`}>
-                    Day {dayIndex}
-                  </p>
-                  {blocks.length > 0 && (
-                    <p className="text-[10px] text-slate-400 mt-0.5">{blocks.length} block{blocks.length !== 1 ? 's' : ''}</p>
-                  )}
-                  {isSavingHere && <span className="text-[10px] text-amber-500 animate-pulse">Saving…</span>}
+              <div key={dayIndex} className="flex flex-col">
+                {/* Column header: checkbox + day label + action buttons */}
+                <div className="px-2 pt-3 pb-2 border-b border-slate-100 sticky top-0 z-10 bg-white">
+                  {/* Checkbox row */}
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <button
+                      onClick={() => toggleDayCheck(dayIndex)}
+                      className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                        isChecked ? 'bg-slate-700 border-slate-700' : 'border-slate-300 hover:border-slate-500'
+                      }`}
+                    >
+                      {isChecked && <Check size={9} className="text-white"/>}
+                    </button>
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${blocks.length > 0 ? 'text-slate-700' : 'text-slate-400'}`}>
+                      Day {dayIndex}
+                    </span>
+                    {isSavingHere && <span className="text-[9px] text-amber-500 animate-pulse ml-auto">…</span>}
+                  </div>
+                  {/* Action buttons row */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      title="Add block"
+                      onClick={() => { setAddingToDay(dayIndex); setNewBlockName(''); setNewBlockDesc(''); }}
+                      className="flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-slate-700 hover:text-white hover:border-slate-700 transition-colors"
+                    >
+                      <Plus size={13}/>
+                    </button>
+                    <button
+                      title="Delete all blocks"
+                      onClick={() => { if (blocks.length === 0) return; if (confirm(`Delete all ${blocks.length} block(s) in Day ${dayIndex}?`)) saveBlocks(dayIndex, []); }}
+                      disabled={blocks.length === 0}
+                      className="flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors disabled:opacity-30"
+                    >
+                      <Trash2 size={13}/>
+                    </button>
+                    <button
+                      title="Copy all blocks to next day"
+                      onClick={async () => {
+                        if (blocks.length === 0) return;
+                        const to = dayIndex + 1;
+                        const merged = [...(workoutByDay[to]?.blocks ?? []), ...blocks.map((b: Block) => ({ ...b }))];
+                        await saveBlocks(to, merged);
+                      }}
+                      disabled={blocks.length === 0}
+                      className="flex items-center justify-center w-7 h-7 rounded border border-slate-200 text-slate-500 hover:bg-slate-700 hover:text-white hover:border-slate-700 transition-colors disabled:opacity-30"
+                    >
+                      <Copy size={13}/>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Blocks */}
-                <div className="flex-1 p-2 space-y-2 bg-slate-50/30">
-                  {blocks.map((block, bi) => (
-                    <div key={bi} className="bg-white border border-slate-200 rounded-lg p-2 group shadow-sm hover:border-primary-200 hover:shadow transition-all">
-                      <p className="text-xs font-semibold text-slate-800 leading-tight truncate">
-                        {block.name || <span className="italic text-slate-400">Unnamed</span>}
-                      </p>
-                      {block.description && (
-                        <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2 leading-tight">{block.description}</p>
-                      )}
-                      {/* Action bar — visible on hover */}
-                      <div className="flex items-center gap-0.5 mt-1.5 pt-1.5 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button title="Move up" onClick={() => handleMoveInDay(dayIndex, bi, 'up')} disabled={bi === 0}
-                          className="p-0.5 rounded text-slate-300 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-20 transition-colors">
-                          <ChevronUp size={12}/>
-                        </button>
-                        <button title="Move down" onClick={() => handleMoveInDay(dayIndex, bi, 'down')} disabled={bi === blocks.length - 1}
-                          className="p-0.5 rounded text-slate-300 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-20 transition-colors">
-                          <ChevronDown size={12}/>
-                        </button>
-                        <button title={`Move to Day ${dayIndex - 1}`} onClick={() => handleMoveDay(dayIndex, bi, dayIndex - 1)} disabled={dayIndex <= 1}
-                          className="p-0.5 rounded text-slate-300 hover:text-blue-500 hover:bg-blue-50 disabled:opacity-20 transition-colors">
-                          <ChevronLeft size={12}/>
-                        </button>
-                        <button title={`Move to Day ${dayIndex + 1}`} onClick={() => handleMoveDay(dayIndex, bi, dayIndex + 1)}
-                          className="p-0.5 rounded text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors">
-                          <ChevronRight size={12}/>
-                        </button>
-                        <button title="Duplicate" onClick={() => handleDuplicate(dayIndex, bi)}
-                          className="p-0.5 rounded text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                          <Copy size={12}/>
-                        </button>
-                        <button title="Delete" onClick={() => { if (confirm('Delete this block?')) handleDelete(dayIndex, bi); }}
-                          className="p-0.5 rounded text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
-                          <X size={12}/>
-                        </button>
+                {/* Block list */}
+                <div className="flex-1 px-2 py-2 space-y-1">
+                  {blocks.map((block, bi) => {
+                    const isSel = selectedBlock?.day === dayIndex && selectedBlock?.bi === bi;
+                    return (
+                      <div key={bi}
+                        className={`group cursor-pointer rounded-md px-2 py-2 transition-colors ${isSel ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                        onClick={() => setSelectedBlock(isSel ? null : { day: dayIndex, bi })}>
+                        <p className="text-xs font-semibold text-slate-800 leading-snug">
+                          {String.fromCharCode(64 + bi + 1)}) {block.name || <span className="italic text-slate-400">Unnamed</span>}
+                        </p>
+                        {block.description && (
+                          <p className="text-[10px] text-slate-500 mt-0.5 leading-snug line-clamp-3">{block.description}</p>
+                        )}
+                        {/* Per-block actions — visible when selected */}
+                        {isSel && (
+                          <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-slate-200">
+                            <button title="Move up" onClick={e => { e.stopPropagation(); handleMoveInDay(dayIndex, bi, 'up'); }} disabled={bi === 0}
+                              className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 disabled:opacity-20 transition-colors">
+                              <ChevronUp size={12}/>
+                            </button>
+                            <button title="Move down" onClick={e => { e.stopPropagation(); handleMoveInDay(dayIndex, bi, 'down'); }} disabled={bi === blocks.length - 1}
+                              className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 disabled:opacity-20 transition-colors">
+                              <ChevronDown size={12}/>
+                            </button>
+                            <button title={`Move to Day ${dayIndex - 1}`} onClick={e => { e.stopPropagation(); handleMoveDay(dayIndex, bi, dayIndex - 1); }} disabled={dayIndex <= 1}
+                              className="p-0.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-20 transition-colors">
+                              <ChevronLeft size={12}/>
+                            </button>
+                            <button title={`Move to Day ${dayIndex + 1}`} onClick={e => { e.stopPropagation(); handleMoveDay(dayIndex, bi, dayIndex + 1); }}
+                              className="p-0.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                              <ChevronRight size={12}/>
+                            </button>
+                            <button title="Duplicate" onClick={e => { e.stopPropagation(); handleDuplicate(dayIndex, bi); }}
+                              className="p-0.5 rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                              <Copy size={12}/>
+                            </button>
+                            <button title="Delete" onClick={e => { e.stopPropagation(); if (confirm('Delete this block?')) handleDelete(dayIndex, bi); }}
+                              className="p-0.5 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                              <X size={12}/>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
-                  {/* Add block form */}
-                  {isAddingHere ? (
-                    <div className="border border-primary-200 bg-primary-50 rounded-lg p-2 space-y-1.5">
+                  {/* Add block inline form */}
+                  {isAddingHere && (
+                    <div className="mt-1 space-y-1">
                       <input
                         autoFocus
                         value={newBlockName}
                         onChange={e => setNewBlockName(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') handleAddBlock(dayIndex); if (e.key === 'Escape') { setAddingToDay(null); setNewBlockName(''); setNewBlockDesc(''); } }}
                         placeholder="Block name…"
-                        className="w-full px-2 py-1.5 text-xs border border-primary-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white"
+                        className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-slate-500 bg-white"
                       />
                       <textarea
                         value={newBlockDesc}
                         onChange={e => setNewBlockDesc(e.target.value)}
                         placeholder="Description (optional)…"
                         rows={2}
-                        className="w-full px-2 py-1.5 text-xs border border-primary-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 bg-white resize-none"
+                        className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-slate-500 bg-white resize-none"
                       />
                       <div className="flex gap-1">
                         <button onClick={() => { setAddingToDay(null); setNewBlockName(''); setNewBlockDesc(''); }}
-                          className="flex-1 py-1 text-[11px] font-medium text-slate-500 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
+                          className="flex-1 py-1 text-[11px] font-medium text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 transition-colors">
                           Cancel
                         </button>
                         <button onClick={() => handleAddBlock(dayIndex)}
-                          className="flex-1 py-1 text-[11px] font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
+                          className="flex-1 py-1 text-[11px] font-medium text-white bg-slate-700 rounded hover:bg-slate-800 transition-colors">
                           Add
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => { setAddingToDay(dayIndex); setNewBlockName(''); setNewBlockDesc(''); }}
-                      className="w-full flex items-center justify-center gap-1 py-2 text-[11px] font-medium text-primary-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg border border-dashed border-primary-200 hover:border-primary-300 transition-colors"
-                    >
-                      <Plus size={11}/> Add Block
-                    </button>
+                  )}
+
+                  {blocks.length === 0 && !isAddingHere && (
+                    <p className="text-[10px] text-slate-300 text-center mt-4">No blocks</p>
                   )}
                 </div>
               </div>
