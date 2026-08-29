@@ -412,13 +412,6 @@ function BlockEditor({ blocks, onChange }: { blocks: Block[]; onChange:(b:Block[
           </div>
         );
       })}
-      <button
-        type="button"
-        onClick={() => onChange([...blocks, { name: '', description: '', videoUrl: '' }])}
-        className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium"
-      >
-        <PlusCircle size={14}/> Add block
-      </button>
     </div>
   );
 }
@@ -436,7 +429,7 @@ function WorkoutDialog({
   const isEdit = !!existingWorkout;
   const [title, setTitle]       = useState(existingWorkout?.title ?? '');
   const [desc,  setDesc]        = useState(existingWorkout?.description ?? '');
-  const [blocks,setBlocks]      = useState<Block[]>(existingWorkout?.blocks ?? []);
+  const [blocks,setBlocks]      = useState<Block[]>(existingWorkout?.blocks ?? [{ name: '', description: '', videoUrl: '' }]);
   const [error, setError]       = useState('');
 
   const saveMutation = useMutation({
