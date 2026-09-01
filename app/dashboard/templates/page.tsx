@@ -470,6 +470,17 @@ function WorkoutDialog({
           {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
 
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Workout title</label>
+            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder={`Day ${dayIndex}`}
+              autoFocus
+              className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"/>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
+            <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Optional…" rows={2}
+              className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"/>
+          </div>
+          <div>
             <BlockEditor blocks={blocks} onChange={setBlocks}/>
           </div>
 
@@ -636,8 +647,9 @@ function MonthView({
                 {workouts.slice(0, 2).map((w:any) => (
                   <button key={w.id}
                     onClick={e => { e.stopPropagation(); onClickWorkout(w, date); }}
-                    className={`w-full text-left px-2 py-0.5 rounded text-white text-xs font-medium truncate ${eventColor(w.id)} hover:opacity-90 transition-opacity`}>
-                    {w.title}
+                    className={`w-full text-left px-2 py-1 rounded text-white text-xs font-medium ${eventColor(w.id)} hover:opacity-90 transition-opacity`}>
+                    <p className="font-semibold truncate">{w.title}</p>
+                    {w.description && <p className="opacity-80 text-[10px] truncate">{w.description}</p>}
                   </button>
                 ))}
                 {workouts.length > 2 && (
