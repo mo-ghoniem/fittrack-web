@@ -1006,7 +1006,7 @@ function AthleteCalendarView() {
   const monthKey = toMonthKey(viewYear, viewMonth);
   const qc = useQueryClient();
 
-  // Fetch all workouts for the current month (for dots)
+  // Fetch all workouts for the current month (for calendar dots)
   const { data: monthData, isLoading: monthLoading } = useQuery({
     queryKey: ['assigned-month', monthKey],
     queryFn: () => assignedWorkoutsApi.getMyMonth(monthKey),
@@ -1014,7 +1014,7 @@ function AthleteCalendarView() {
 
   const monthWorkouts: any[] = monthData?.data ?? [];
 
-  // Map date → workouts for fast lookup
+  // Map date → workouts for calendar dots (may only include today/future from server)
   const workoutsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     for (const w of monthWorkouts) {
@@ -1025,8 +1025,17 @@ function AthleteCalendarView() {
     return map;
   }, [monthWorkouts]);
 
-  // Workouts for the selected day
-  const selectedWorkouts = workoutsByDate[selectedDate] ?? [];
+  // Always fetch the selected day directly so past dates are not filtered out
+  const { data: dayData, isLoading: dayLoading } = useQuery({
+    queryKey: ['assigned-day', selectedDate],
+    queryFn: () => assignedWorkoutsApi.getMyDay(selectedDate),
+    staleTime: 30_000,
+  });
+
+  // Prefer the direct day fetch (shows past workouts); fall back to month map
+  const selectedWorkouts: any[] = dayData?.data?.length
+    ? dayData.data
+    : (workoutsByDate[selectedDate] ?? []);
 
   // Build calendar grid
   const calendarDays = useMemo(() => {
@@ -1166,7 +1175,7 @@ function AthleteCalendarView() {
         </div>
 
         <div className="p-5">
-          {monthLoading ? (
+          {dayLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
             </div>
@@ -1184,7 +1193,10 @@ function AthleteCalendarView() {
                 <WorkoutCard
                   key={w.id}
                   w={w}
-                  onSaved={() => qc.invalidateQueries({ queryKey: ['assigned-month', monthKey] })}
+                  onSaved={() => {
+                    qc.invalidateQueries({ queryKey: ['assigned-month', monthKey] });
+                    qc.invalidateQueries({ queryKey: ['assigned-day', selectedDate] });
+                  }}
                 />
               ))}
             </div>
